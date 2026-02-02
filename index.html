@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Carreiro Express</title>
 
-    <!-- Tailwind via CDN (ok para MVP / depois migraremos) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
     <!-- Fonte -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
@@ -17,50 +14,23 @@
     <style>
       :root {
         --primary-color: #e11d48;
-        --bg-color: #f9fafb;
+        --bg-color: #e11d48;
       }
 
       body {
-        font-family: 'Inter', sans-serif;
+        font-family: "Inter", sans-serif;
+        margin: 0;
         -webkit-tap-highlight-color: transparent;
         user-select: none;
-      }
-
-      .bg-primary {
-        background-color: var(--primary-color);
-      }
-
-      .text-primary {
-        color: var(--primary-color);
-      }
-
-      .border-primary {
-        border-color: var(--primary-color);
-      }
-
-      .bg-dynamic {
-        background-color: var(--bg-color);
-      }
-
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-
-      ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-      }
-
-      ::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 4px;
+        background-color: #f9fafb;
       }
     </style>
   </head>
 
-  <body class="bg-gray-50 overflow-hidden">
+  <body class="overflow-hidden">
     <div id="root"></div>
 
-    <!-- 🔴 ISSO É O MAIS IMPORTANTE -->
-    <script type="module" src="/src/index.tsx"></script>
+    <!-- 🔴 ESTE SCRIPT É O QUE RESOLVE O ERRO -->
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
