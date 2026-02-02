@@ -1,0 +1,5 @@
+{
+  "name": "CARREIRO EXPRESS",
+  "description": "Sistema de Totem de Autoatendimento para Lanchonetes, com interface touch, navegação por categorias, seleção de produtos e finalização de pedidos com forma de pagamento obrigatória. Possui painel administrativo protegido por PIN para personalização (logo, nome da loja, textos, cores e botões). Projetado para integração com Brendi, respeitando suas regras operacionais e evitando conflitos de integração.",
+  "requestFramePermissions": []
+}
