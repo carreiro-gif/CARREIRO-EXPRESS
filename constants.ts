@@ -1,39 +1,55 @@
-export const APP_CONFIG = {
-  // Integração
-  ORIGIN: 'TOTEM',
-  API_URL: 'https://api.brendi.com.br/v1',
+import { Category, Product } from "./types";
 
-  // Branding (white-label)
-  BRAND: {
-    STORE_NAME: 'Espaço Carreiro Lanches',
-    SYSTEM_NAME: 'Carreiro Express',
-
-    LOGO: {
-      TYPE: 'image', // 'image' | 'icon'
-      IMAGE_URL: '/assets/logo.png',
-      ICON: '🍔',
-    },
-
-    COLORS: {
-      PRIMARY: '#C62828',
-      SECONDARY: '#FFC107',
-      BACKGROUND: '#FFFFFF',
-      TEXT: '#111827',
-    },
-
-    TEXTS: {
-      WELCOME_TITLE: 'Bem-vindo ao Carreiro Express',
-      WELCOME_SUBTITLE: 'Escolha seu lanche e faça seu pedido',
-      EAT_HERE_LABEL: 'Comer aqui',
-      TAKE_AWAY_LABEL: 'Para levar',
-    },
+/**
+ * Categorias mockadas (modo fallback / testes / totem offline)
+ */
+export const MOCK_CATEGORIES: Category[] = [
+  {
+    id: "burgers",
+    name: "Hambúrgueres",
+    order: 1,
   },
-
-  // Segurança do painel administrador
-  ADMIN: {
-    ENABLED: true,
-    ACCESS_MODE: 'LOGO_MULTI_CLICK', // futuro: 'PIN_BUTTON'
-    CLICK_COUNT: 3,
-    DEFAULT_PIN: '1234',
+  {
+    id: "combos",
+    name: "Combos",
+    order: 2,
   },
-};
+  {
+    id: "bebidas",
+    name: "Bebidas",
+    order: 3,
+  },
+];
+
+/**
+ * Produtos mockados
+ */
+export const MOCK_PRODUCTS: Product[] = [
+  {
+    id: "carreiro-duplo",
+    name: "Duplo Carreiro",
+    description: "Hambúrguer duplo com queijo e molho especial",
+    price: 29.9,
+    categoryId: "burgers",
+    image: "",
+    active: true,
+  },
+  {
+    id: "combo-casal",
+    name: "Combo Casal Carreiro",
+    description: "2 lanches + fritas + refrigerante",
+    price: 59.9,
+    categoryId: "combos",
+    image: "",
+    active: true,
+  },
+  {
+    id: "refrigerante-lata",
+    name: "Refrigerante Lata",
+    description: "350ml",
+    price: 6.0,
+    categoryId: "bebidas",
+    image: "",
+    active: true,
+  },
+];
