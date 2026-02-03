@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { OrderProvider } from './context/OrderContext';
 import { ConfigProvider } from './context/ConfigContext';
@@ -17,13 +16,15 @@ const AppContent: React.FC = () => {
     switch (currentScreen) {
       case 'HOME':
         return <HomeScreen onStart={() => setCurrentScreen('MENU')} />;
+
       case 'MENU':
         return (
-          <MenuScreen 
-            onBack={() => setCurrentScreen('HOME')} 
-            onCheckout={() => setCurrentScreen('PAYMENT')} 
+          <MenuScreen
+            onBack={() => setCurrentScreen('HOME')}
+            onCheckout={() => setCurrentScreen('PAYMENT')}
           />
         );
+
       case 'PAYMENT':
         return (
           <PaymentScreen
@@ -34,20 +35,29 @@ const AppContent: React.FC = () => {
             }}
           />
         );
+
       case 'SUCCESS':
         return (
-          <SuccessScreen 
-            orderId={lastOrderId} 
-            onFinish={() => setCurrentScreen('HOME')} 
+          <SuccessScreen
+            orderId={lastOrderId}
+            onFinish={() => setCurrentScreen('HOME')}
           />
         );
+
       default:
         return <HomeScreen onStart={() => setCurrentScreen('MENU')} />;
     }
   };
 
   return (
-    <div className="w-full h-screen overflow-hidden">
+    <div
+      style={{
+        width: '100%',
+        height: '100vh',
+        overflow: 'hidden',
+        backgroundColor: '#f9fafb'
+      }}
+    >
       {renderScreen()}
     </div>
   );
