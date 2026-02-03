@@ -1,0 +1,93 @@
+/* RESET BÁSICO */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* LAYOUT GERAL */
+body {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+/* CONTAINER PRINCIPAL */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* CABEÇALHO */
+.header {
+  background-color: #e11d48;
+  color: #ffffff;
+  padding: 20px;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.header p {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+/* CONTEÚDO */
+.main {
+  flex: 1;
+  padding: 20px;
+}
+
+/* GRID DE BOTÕES / CATEGORIAS */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* BOTÃO GRANDE (TOTEM) */
+.card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 30px 20px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* BOTÃO DE AÇÃO */
+.button {
+  background-color: #e11d48;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+/* RODAPÉ */
+.footer {
+  background-color: #111827;
+  color: #ffffff;
+  text-align: center;
+  padding: 12px;
+  font-size: 14px;
+}
