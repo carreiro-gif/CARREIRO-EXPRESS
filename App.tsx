@@ -1,26 +1,31 @@
 import React, { useState } from 'react';
 import { OrderProvider } from './context/OrderContext';
 import { ConfigProvider } from './context/ConfigContext';
-import HomeScreen from './screens/HomeScreen';
+
+import StartScreen from './screens/StartScreen';
 import MenuScreen from './screens/MenuScreen';
 import PaymentScreen from './screens/PaymentScreen';
 import SuccessScreen from './screens/SuccessScreen';
 
-type Screen = 'HOME' | 'MENU' | 'PAYMENT' | 'SUCCESS';
+type Screen = 'START' | 'MENU' | 'PAYMENT' | 'SUCCESS';
 
 const AppContent: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('HOME');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('START');
   const [lastOrderId, setLastOrderId] = useState<string>('');
 
   const renderScreen = () => {
     switch (currentScreen) {
-      case 'HOME':
-        return <HomeScreen onStart={() => setCurrentScreen('MENU')} />;
+      case 'START':
+        return (
+          <StartScreen
+            onStart={() => setCurrentScreen('MENU')}
+          />
+        );
 
       case 'MENU':
         return (
           <MenuScreen
-            onBack={() => setCurrentScreen('HOME')}
+            onBack={() => setCurrentScreen('START')}
             onCheckout={() => setCurrentScreen('PAYMENT')}
           />
         );
@@ -40,12 +45,12 @@ const AppContent: React.FC = () => {
         return (
           <SuccessScreen
             orderId={lastOrderId}
-            onFinish={() => setCurrentScreen('HOME')}
+            onFinish={() => setCurrentScreen('START')}
           />
         );
 
       default:
-        return <HomeScreen onStart={() => setCurrentScreen('MENU')} />;
+        return null;
     }
   };
 

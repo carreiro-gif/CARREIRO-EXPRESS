@@ -1,3 +1,12 @@
+:root {
+  --primary: #e11d48;
+  --primary-dark: #be123c;
+  --bg: #f9fafb;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+}
 /* RESET BÁSICO */
 * {
   box-sizing: border-box;
@@ -7,8 +16,9 @@
 
 /* LAYOUT GERAL */
 body {
-  background-color: #f9fafb;
-  color: #111827;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 /* CONTAINER PRINCIPAL */
@@ -90,4 +100,75 @@ body {
   text-align: center;
   padding: 12px;
   font-size: 14px;
+}
+/* START SCREEN */
+.start-screen {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.start-banner {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+}
+
+.start-content {
+  background: #ffffff;
+  padding: 24px;
+  text-align: center;
+}
+
+.start-button {
+  width: 100%;
+  background: #e11d48;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 900;
+  padding: 28px;
+  border: none;
+  border-radius: 18px;
+}
+
+.payments {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.screen {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.card-box {
+  background: var(--card);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.primary-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 24px;
+  padding: 20px;
+  font-size: 24px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-button:active {
+  transform: scale(0.97);
 }
