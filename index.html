@@ -4,22 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Carreiro Express</title>
-
     <!-- Fonte -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-
-    <!-- CSS LOCAL (SEM CDN) -->
-    <link rel="stylesheet" href="/style.css" />
-
+    <!-- CSS LOCAL (agora dentro de src/) -->
+    <link rel="stylesheet" href="/src/style.css" />
     <style>
       :root {
         --primary-color: #e11d48;
         --bg-color: #f9fafb;
       }
-
       body {
         font-family: "Inter", sans-serif;
         margin: 0;
@@ -28,10 +24,9 @@
       }
     </style>
   </head>
-
   <body>
     <div id="root"></div>
-
-    <script type="module" src="/index.tsx"></script>
+    <!-- CORRIGIDO: Agora aponta para src/main.tsx -->
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>
