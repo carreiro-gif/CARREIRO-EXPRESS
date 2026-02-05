@@ -1,23 +1,41 @@
-import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
-export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
-    return {
-      server: {
-        port: 3000,
-        host: '0.0.0.0',
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  
+  // IMPORTANTE: base deve ser '/' para deploy direto no domínio
+  base: '/',
+  
+  // Configurações de build otimizadas
+  build: {
+    outDir: 'dist',
+    sourcemap: false, // desabilitar em produção para reduzir tamanho
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+        },
       },
-      plugins: [react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '.'),
-        }
-      }
-    };
-});
+    },
+  },
+  
+  // Alias para imports limpos (opcional, mas recomendado)
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  
+  // Configuração de preview (para testar build localmente)
+  preview: {
+    port: 4173,
+  },
+  
+  // Server para desenvolvimento
+  server: {
+    port: 5173,
+  },
+})
