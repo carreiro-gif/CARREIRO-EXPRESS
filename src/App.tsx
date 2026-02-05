@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { OrderProvider } from './context/OrderContext';
-import { ConfigProvider } from './context/ConfigContext';
-
-import StartScreen from './screens/StartScreen';
-import MenuScreen from './screens/MenuScreen';
-import PaymentScreen from './screens/PaymentScreen';
-import SuccessScreen from './screens/SuccessScreen';
-import ConfigScreen from './pages/config/ConfigScreen';
+import { OrderProvider } from './context/OrderContext.tsx';
+import { ConfigProvider } from './context/ConfigContext.tsx';
+import StartScreen from './screens/StartScreen.tsx';
+import MenuScreen from './screens/MenuScreen.tsx';
+import PaymentScreen from './screens/PaymentScreen.tsx';
+import SuccessScreen from './screens/SuccessScreen.tsx';
+import ConfigScreen from './pages/config/ConfigScreen.tsx';
 
 type Screen = 'START' | 'MENU' | 'PAYMENT' | 'SUCCESS' | 'CONFIG';
 
@@ -23,7 +22,6 @@ const AppContent: React.FC = () => {
             onOpenConfig={() => setCurrentScreen('CONFIG')}
           />
         );
-
       case 'MENU':
         return (
           <MenuScreen
@@ -31,7 +29,6 @@ const AppContent: React.FC = () => {
             onCheckout={() => setCurrentScreen('PAYMENT')}
           />
         );
-
       case 'PAYMENT':
         return (
           <PaymentScreen
@@ -42,7 +39,6 @@ const AppContent: React.FC = () => {
             }}
           />
         );
-
       case 'SUCCESS':
         return (
           <SuccessScreen
@@ -50,14 +46,12 @@ const AppContent: React.FC = () => {
             onFinish={() => setCurrentScreen('START')}
           />
         );
-
       case 'CONFIG':
         return (
           <ConfigScreen
             onClose={() => setCurrentScreen('START')}
           />
         );
-
       default:
         return null;
     }
