@@ -6,8 +6,9 @@ import StartScreen from './screens/StartScreen';
 import MenuScreen from './screens/MenuScreen';
 import PaymentScreen from './screens/PaymentScreen';
 import SuccessScreen from './screens/SuccessScreen';
+import ConfigScreen from './pages/config/ConfigScreen';
 
-type Screen = 'START' | 'MENU' | 'PAYMENT' | 'SUCCESS';
+type Screen = 'START' | 'MENU' | 'PAYMENT' | 'SUCCESS' | 'CONFIG';
 
 const AppContent: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('START');
@@ -19,6 +20,7 @@ const AppContent: React.FC = () => {
         return (
           <StartScreen
             onStart={() => setCurrentScreen('MENU')}
+            onOpenConfig={() => setCurrentScreen('CONFIG')}
           />
         );
 
@@ -34,7 +36,7 @@ const AppContent: React.FC = () => {
         return (
           <PaymentScreen
             onBack={() => setCurrentScreen('MENU')}
-            onSuccess={(id) => {
+            onSuccess={(id: string) => {
               setLastOrderId(id);
               setCurrentScreen('SUCCESS');
             }}
@@ -49,6 +51,13 @@ const AppContent: React.FC = () => {
           />
         );
 
+      case 'CONFIG':
+        return (
+          <ConfigScreen
+            onClose={() => setCurrentScreen('START')}
+          />
+        );
+
       default:
         return null;
     }
@@ -60,7 +69,7 @@ const AppContent: React.FC = () => {
         width: '100%',
         height: '100vh',
         overflow: 'hidden',
-        backgroundColor: '#f9fafb'
+        backgroundColor: '#f9fafb',
       }}
     >
       {renderScreen()}
