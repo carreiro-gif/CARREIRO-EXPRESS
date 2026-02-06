@@ -250,13 +250,6 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
             <p style={styles.description}>
               Adicione imagens, títulos e organize a ordem arrastando os slides.
             </p>
-      case 'carrossel':
-        return (
-          <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Gerenciar Carrossel</h2>
-            <p style={styles.description}>
-              Adicione imagens, títulos e organize a ordem arrastando os slides.
-            </p>
 
             {/* Informação sobre tamanho ideal - MONITOR VERTICAL */}
             <div style={styles.imageSizeInfo}>
@@ -269,9 +262,6 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                 </p>
               </div>
             </div>
-
-            {/* Lista de Slides */}
-            <div style={styles.carouselList}>
 
             {/* Lista de Slides */}
             <div style={styles.carouselList}>
@@ -303,7 +293,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                       <img src={slide.url} alt={`Slide ${index + 1}`} style={styles.slidePreview} />
                     ) : (
                       <label htmlFor={`carousel-${index}`} style={styles.uploadPlaceholder}>
-                        📷 Clique para adicionar imagem (16:9)
+                        📷 Clique para adicionar imagem (9:16)
                       </label>
                     )}
                   </div>
@@ -651,10 +641,6 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
   )
 }
 
-// Estilos continuam no próximo bloco devido ao tamanho...
-
-// CONTINUAÇÃO DO AdminScreen.tsx - ESTILOS
-
 const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
@@ -837,6 +823,44 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
     borderRadius: '0.5rem',
     cursor: 'pointer',
+  },
+
+  // Informação de tamanho de imagem
+  imageSizeInfo: {
+    display: 'flex',
+    gap: '1rem',
+    padding: '1.5rem',
+    backgroundColor: '#DBEAFE',
+    border: '2px solid #3B82F6',
+    borderRadius: '0.75rem',
+    marginBottom: '2rem',
+  },
+
+  imageSizeIcon: {
+    fontSize: '3rem',
+    lineHeight: 1,
+  },
+
+  imageSizeTitle: {
+    fontSize: '1rem',
+    fontWeight: 600,
+    color: '#1E40AF',
+    margin: 0,
+    marginBottom: '0.5rem',
+  },
+
+  imageSizeValue: {
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    color: '#1E3A8A',
+    margin: 0,
+    marginBottom: '0.5rem',
+  },
+
+  imageSizeHint: {
+    fontSize: '0.875rem',
+    color: '#1E40AF',
+    margin: 0,
   },
 
   // Carrossel
@@ -1169,43 +1193,6 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
   },
-
-  // Informação de tamanho de imagem
-  imageSizeInfo: {
-    display: 'flex',
-    gap: '1rem',
-    padding: '1.5rem',
-    backgroundColor: '#DBEAFE',
-    border: '2px solid #3B82F6',
-    borderRadius: '0.75rem',
-    marginBottom: '2rem',
-  },
-
-  imageSizeIcon: {
-    fontSize: '3rem',
-    lineHeight: 1,
-  },
-
-  imageSizeTitle: {
-    fontSize: '1rem',
-    fontWeight: 600,
-    color: '#1E40AF',
-    margin: 0,
-    marginBottom: '0.5rem',
-  },
-
-  imageSizeValue: {
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    color: '#1E3A8A',
-    margin: 0,
-    marginBottom: '0.5rem',
-  },
-
-  imageSizeHint: {
-    fontSize: '0.875rem',
-    color: '#1E40AF',
-    margin: 0,
-  },
+}
 
 export default AdminScreen
