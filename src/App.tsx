@@ -7,7 +7,7 @@ import PaymentScreen from './screens/PaymentScreen.tsx';
 import SuccessScreen from './screens/SuccessScreen.tsx';
 import AdminScreen from './screens/AdminScreen.tsx';
 
-type Screen = 'HOME' → 'ORDER_TYPE' → 'MENU' → 'PAYMENT' → 'SUCCESS'
+type Screen = 'HOME' | 'MENU' | 'PAYMENT' | 'SUCCESS' | 'ADMIN';
 
 const AppContent: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('HOME');
