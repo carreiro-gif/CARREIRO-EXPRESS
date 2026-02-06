@@ -1,31 +1,31 @@
 import React, { useState } from 'react';
 import { OrderProvider } from './context/OrderContext.tsx';
 import { ConfigProvider } from './context/ConfigContext.tsx';
-import StartScreen from './screens/StartScreen.tsx';
+import HomeScreen from './screens/HomeScreen.tsx';
 import MenuScreen from './screens/MenuScreen.tsx';
 import PaymentScreen from './screens/PaymentScreen.tsx';
 import SuccessScreen from './screens/SuccessScreen.tsx';
-import ConfigScreen from './pages/config/ConfigScreen.tsx';
+import AdminScreen from './screens/AdminScreen.tsx';
 
-type Screen = 'START' | 'MENU' | 'PAYMENT' | 'SUCCESS' | 'CONFIG';
+type Screen = 'HOME' | 'MENU' | 'PAYMENT' | 'SUCCESS' | 'ADMIN';
 
 const AppContent: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('START');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('HOME');
   const [lastOrderId, setLastOrderId] = useState<string>('');
 
   const renderScreen = () => {
     switch (currentScreen) {
-      case 'START':
+      case 'HOME':
         return (
-          <StartScreen
+          <HomeScreen
             onStart={() => setCurrentScreen('MENU')}
-            onOpenConfig={() => setCurrentScreen('CONFIG')}
+            onOpenConfig={() => setCurrentScreen('ADMIN')}
           />
         );
       case 'MENU':
         return (
           <MenuScreen
-            onBack={() => setCurrentScreen('START')}
+            onBack={() => setCurrentScreen('HOME')}
             onCheckout={() => setCurrentScreen('PAYMENT')}
           />
         );
@@ -43,13 +43,13 @@ const AppContent: React.FC = () => {
         return (
           <SuccessScreen
             orderId={lastOrderId}
-            onFinish={() => setCurrentScreen('START')}
+            onFinish={() => setCurrentScreen('HOME')}
           />
         );
-      case 'CONFIG':
+      case 'ADMIN':
         return (
-          <ConfigScreen
-            onClose={() => setCurrentScreen('START')}
+          <AdminScreen
+            onClose={() => setCurrentScreen('HOME')}
           />
         );
       default:
