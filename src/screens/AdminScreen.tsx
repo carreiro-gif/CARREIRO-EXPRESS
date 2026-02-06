@@ -1,618 +1,298 @@
-// src/screens/AdminScreen.tsx
-
-import React, { useState } from 'react'
-import { theme } from '../theme/theme'
-import { useConfig } from '../context/ConfigContext'
-
-interface AdminScreenProps {
-  onClose: () => void
-}
-
-type AdminTab = 
-  | 'geral' 
-  | 'carrossel' 
-  | 'aparencia' 
-  | 'formas-pagamento'
-
-const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
-  const { config, updateConfig } = useConfig()
-  const [activeTab, setActiveTab] = useState<AdminTab>('geral')
-
-  // Estados locais para edição
-  const [storeName, setStoreName] = useState(config.storeName)
-  const [buttonText, setButtonText] = useState(config.buttonText)
-  const [backgroundColor, setBackgroundColor] = useState(config.backgroundColor)
-  const [primaryColor, setPrimaryColor] = useState(config.primaryColor)
-  const [logoUrl, setLogoUrl] = useState(config.logoUrl || '')
-
-  // Salvar configurações
-  const handleSave = () => {
-    updateConfig({
-      storeName,
-      buttonText,
-      backgroundColor,
-      primaryColor,
-      logoUrl: logoUrl || null,
-    })
-    alert('✅ Configurações salvas com sucesso!')
-  }
-
-  const tabs = [
-    { id: 'geral' as AdminTab, label: 'Geral', icon: '⚙️' },
-    { id: 'carrossel' as AdminTab, label: 'Carrossel', icon: '🎬' },
-    { id: 'aparencia' as AdminTab, label: 'Aparência', icon: '🎨' },
-    { id: 'formas-pagamento' as AdminTab, label: 'Pagamentos', icon: '💳' },
-  ]
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'geral':
-        return (
-          <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Configurações Gerais</h2>
-
-            {/* Nome da Loja */}
-            <div style={styles.field}>
-              <label style={styles.label}>Nome da Loja</label>
-              <input
-                type="text"
-                value={storeName}
-                onChange={(e) => setStoreName(e.target.value)}
-                style={styles.input}
-                placeholder="Ex: CARREIRO LANCHES"
-              />
-            </div>
-
-            {/* Texto do Botão */}
-            <div style={styles.field}>
-              <label style={styles.label}>Texto do Botão Principal</label>
-              <input
-                type="text"
-                value={buttonText}
-                onChange={(e) => setButtonText(e.target.value)}
-                style={styles.input}
-                placeholder="Ex: PEÇA AQUI"
-              />
-            </div>
-
-            {/* URL da Logo */}
-            <div style={styles.field}>
-              <label style={styles.label}>Logo (URL da Imagem)</label>
-              <input
-                type="text"
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-                style={styles.input}
-                placeholder="https://exemplo.com/logo.png"
-              />
-              <p style={styles.hint}>
-                💡 Cole a URL de uma imagem hospedada online
-              </p>
-              {logoUrl && (
-                <div style={styles.preview}>
-                  <p style={styles.previewLabel}>Preview:</p>
-                  <img 
-                    src={logoUrl} 
-                    alt="Logo preview" 
-                    style={styles.previewImage}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none'
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        )
-
-      case 'carrossel':
-        return (
-          <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Gerenciar Carrossel</h2>
-            <p style={styles.description}>
-              Configure as imagens que aparecem no carrossel da tela inicial.
-            </p>
-
-            <div style={styles.comingSoon}>
-              <span style={styles.comingSoonIcon}>🚧</span>
-              <h3 style={styles.comingSoonTitle}>Em Desenvolvimento</h3>
-              <p style={styles.comingSoonText}>
-                Esta funcionalidade estará disponível em breve.
-                <br />
-                Por enquanto, o carrossel usa imagens padrão.
-              </p>
-            </div>
-          </div>
-        )
-
-      case 'aparencia':
-        return (
-          <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Aparência</h2>
-
-            {/* Cor de Fundo */}
-            <div style={styles.field}>
-              <label style={styles.label}>Cor de Fundo da Tela Inicial</label>
-              <div style={styles.colorPickerWrapper}>
-                <input
-                  type="color"
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  style={styles.colorPicker}
-                />
-                <input
-                  type="text"
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  style={styles.colorInput}
-                  placeholder="#F9FAFB"
-                />
-              </div>
-              <div 
-                style={{
-                  ...styles.colorPreview,
-                  backgroundColor: backgroundColor,
-                }}
-              />
-            </div>
-
-            {/* Cor Primária */}
-            <div style={styles.field}>
-              <label style={styles.label}>Cor Primária (Botões)</label>
-              <div style={styles.colorPickerWrapper}>
-                <input
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  style={styles.colorPicker}
-                />
-                <input
-                  type="text"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  style={styles.colorInput}
-                  placeholder="#E11D48"
-                />
-              </div>
-              <div 
-                style={{
-                  ...styles.colorPreview,
-                  backgroundColor: primaryColor,
-                }}
-              />
-            </div>
-
-            {/* Preview da Tela */}
-            <div style={styles.previewSection}>
-              <h3 style={styles.previewTitle}>Preview da Tela Inicial:</h3>
-              <div 
-                style={{
-                  ...styles.screenPreview,
-                  backgroundColor: backgroundColor,
-                }}
-              >
-                <div style={styles.mockLogo}>
-                  {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" style={styles.mockLogoImage} />
-                  ) : (
-                    <div style={styles.mockLogoPlaceholder}>LOGO</div>
-                  )}
-                </div>
-                <h1 style={styles.mockStoreName}>{storeName}</h1>
-                <button 
-                  style={{
-                    ...styles.mockButton,
-                    backgroundColor: primaryColor,
-                  }}
-                >
-                  {buttonText}
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-
-      case 'formas-pagamento':
-        return (
-          <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Formas de Pagamento</h2>
-            <p style={styles.description}>
-              Configure quais formas de pagamento estão disponíveis no totem.
-            </p>
-
-            <div style={styles.comingSoon}>
-              <span style={styles.comingSoonIcon}>🚧</span>
-              <h3 style={styles.comingSoonTitle}>Em Desenvolvimento</h3>
-              <p style={styles.comingSoonText}>
-                Esta funcionalidade estará disponível em breve.
-                <br />
-                Por enquanto, todas as formas de pagamento estão ativas.
-              </p>
-            </div>
-          </div>
-        )
-
-      default:
-        return null
-    }
-  }
-
-  return (
-    <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div style={styles.headerLeft}>
-          <h1 style={styles.headerTitle}>⚙️ Painel Administrativo</h1>
-          <p style={styles.headerSubtitle}>Configure seu sistema de autoatendimento</p>
-        </div>
-        <button style={styles.closeButton} onClick={onClose}>
-          ✕ Fechar
-        </button>
-      </div>
-
-      {/* Layout Principal */}
-      <div style={styles.mainLayout}>
-        {/* Sidebar com Tabs */}
-        <div style={styles.sidebar}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              style={{
-                ...styles.tabButton,
-                backgroundColor: activeTab === tab.id
-                  ? '#E11D48'
-                  : 'transparent',
-                color: activeTab === tab.id
-                  ? '#FFFFFF'
-                  : '#374151',
-              }}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <span style={styles.tabIcon}>{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Conteúdo */}
-        <div style={styles.content}>
-          {renderContent()}
-
-          {/* Botões de Ação */}
-          {(activeTab === 'geral' || activeTab === 'aparencia') && (
-            <div style={styles.actions}>
-              <button 
-                style={styles.resetButton}
-                onClick={() => {
-                  setStoreName('CARREIRO LANCHES')
-                  setButtonText('PEÇA AQUI')
-                  setBackgroundColor('#F9FAFB')
-                  setPrimaryColor('#E11D48')
-                  setLogoUrl('')
-                }}
-              >
-                🔄 Restaurar Padrão
-              </button>
-              <button style={styles.saveButton} onClick={handleSave}>
-                💾 Salvar Alterações
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    width: '100%',
-    minHeight: '100vh',
-    backgroundColor: '#F9FAFB',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '2rem',
-    backgroundColor: '#FFFFFF',
-    borderBottom: '1px solid #E5E7EB',
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-  },
-
-  headerLeft: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-
-  headerTitle: {
-    fontSize: '1.875rem',
-    fontWeight: 700,
-    margin: 0,
-    color: '#111827',
-  },
-
-  headerSubtitle: {
-    fontSize: '1rem',
-    color: '#6B7280',
-    margin: 0,
-  },
-
-  closeButton: {
-    padding: '0.75rem 1.5rem',
-    fontSize: '1.125rem',
-    fontWeight: 600,
-    backgroundColor: '#F3F4F6',
-    color: '#374151',
-    border: 'none',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-    transition: 'all 150ms ease-in-out',
-  },
-
-  mainLayout: {
-    display: 'flex',
-    flex: 1,
-    overflow: 'hidden',
-  },
-
-  sidebar: {
-    width: '280px',
-    backgroundColor: '#FFFFFF',
-    borderRight: '1px solid #E5E7EB',
-    padding: '0.5rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-    overflowY: 'auto',
-  },
-
-  tabButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    padding: '1rem',
-    fontSize: '1rem',
-    fontWeight: 500,
-    border: 'none',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-    textAlign: 'left',
-    transition: 'all 150ms ease-in-out',
-  },
-
-  tabIcon: {
-    fontSize: '1.25rem',
-  },
-
-  content: {
-    flex: 1,
-    padding: '2rem',
-    overflowY: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-
-  tabContent: {
-    flex: 1,
-    maxWidth: '800px',
-  },
-
-  sectionTitle: {
-    fontSize: '1.5rem',
-    fontWeight: 700,
-    marginBottom: '1.5rem',
-    color: '#111827',
-  },
-
-  description: {
-    fontSize: '1rem',
-    color: '#6B7280',
-    marginBottom: '2rem',
-  },
-
-  field: {
-    marginBottom: '2rem',
-  },
-
-  label: {
-    display: 'block',
-    fontSize: '1rem',
-    fontWeight: 600,
-    color: '#374151',
-    marginBottom: '0.5rem',
-  },
-
-  input: {
-    width: '100%',
-    padding: '0.75rem',
-    fontSize: '1rem',
-    border: '2px solid #D1D5DB',
-    borderRadius: '0.5rem',
-    transition: 'all 150ms ease-in-out',
-  },
-
-  hint: {
-    fontSize: '0.875rem',
-    color: '#6B7280',
-    marginTop: '0.25rem',
-  },
-
-  colorPickerWrapper: {
-    display: 'flex',
-    gap: '0.75rem',
-    alignItems: 'center',
-  },
-
-  colorPicker: {
-    width: '80px',
-    height: '48px',
-    border: '2px solid #D1D5DB',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-  },
-
-  colorInput: {
-    flex: 1,
-    padding: '0.75rem',
-    fontSize: '1rem',
-    border: '2px solid #D1D5DB',
-    borderRadius: '0.5rem',
-  },
-
-  colorPreview: {
-    width: '100%',
-    height: '60px',
-    borderRadius: '0.5rem',
-    marginTop: '0.75rem',
-    border: '2px solid #D1D5DB',
-  },
-
-  preview: {
-    marginTop: '0.75rem',
-    padding: '0.75rem',
-    backgroundColor: '#F3F4F6',
-    borderRadius: '0.5rem',
-  },
-
-  previewLabel: {
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    color: '#6B7280',
-    marginBottom: '0.5rem',
-  },
-
-  previewImage: {
-    maxWidth: '200px',
-    maxHeight: '200px',
-    objectFit: 'contain',
-  },
-
-  previewSection: {
-    marginTop: '2rem',
-    padding: '1.5rem',
-    backgroundColor: '#F3F4F6',
-    borderRadius: '0.75rem',
-  },
-
-  previewTitle: {
-    fontSize: '1.125rem',
-    fontWeight: 700,
-    marginBottom: '1.5rem',
-  },
-
-  screenPreview: {
-    padding: '2rem',
-    borderRadius: '0.5rem',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '1.5rem',
-    minHeight: '300px',
-    justifyContent: 'center',
-  },
-
-  mockLogo: {
-    width: '100px',
-    height: '100px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  mockLogoImage: {
-    maxWidth: '100%',
-    maxHeight: '100%',
-    objectFit: 'contain',
-  },
-
-  mockLogoPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#D1D5DB',
-    borderRadius: '0.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '0.875rem',
-    color: '#6B7280',
-  },
-
-  mockStoreName: {
-    fontSize: '1.5rem',
-    fontWeight: 700,
-    margin: 0,
-  },
-
-  mockButton: {
-    padding: '0.75rem 1.5rem',
-    fontSize: '1.125rem',
-    fontWeight: 700,
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '0.5rem',
-  },
-
-  comingSoon: {
-    padding: '3rem',
-    textAlign: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: '0.75rem',
-  },
-
-  comingSoonIcon: {
-    fontSize: '64px',
-    display: 'block',
-    marginBottom: '1.5rem',
-  },
-
-  comingSoonTitle: {
-    fontSize: '1.5rem',
-    fontWeight: 700,
-    marginBottom: '0.75rem',
-  },
-
-  comingSoonText: {
-    fontSize: '1rem',
-    color: '#6B7280',
-  },
-
-  actions: {
-    display: 'flex',
-    gap: '0.75rem',
-    marginTop: '2rem',
-    paddingTop: '1.5rem',
-    borderTop: '1px solid #E5E7EB',
-  },
-
-  resetButton: {
-    padding: '1rem 1.5rem',
-    fontSize: '1rem',
-    fontWeight: 600,
-    backgroundColor: '#F3F4F6',
-    color: '#374151',
-    border: 'none',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-    transition: 'all 150ms ease-in-out',
-  },
-
-  saveButton: {
-    padding: '1rem 2rem',
-    fontSize: '1rem',
-    fontWeight: 700,
-    backgroundColor: '#E11D48',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    transition: 'all 150ms ease-in-out',
-  },
-}
-
-export default AdminScreen
+# 🎨 PAINEL ADMINISTRATIVO SUPER COMPLETO - GUIA DE USO
+
+## 🎯 TODAS AS FUNCIONALIDADES IMPLEMENTADAS
+
+### ✅ 1. GERAL
+- **Nome da Loja**: Editar nome que aparece na tela
+- **Texto do Botão**: Personalizar texto do botão principal
+- **Upload de Logo**: 
+  - ✅ Aceita JPG e PNG
+  - ✅ Preview em tempo real
+  - ✅ Botão para remover logo
+  - ✅ Tamanho recomendado: 200x200px
+
+### ✅ 2. CARROSSEL (TOTALMENTE FUNCIONAL!)
+- **Upload Direto de Imagens**:
+  - ✅ Clique para adicionar imagem
+  - ✅ Aceita qualquer formato de imagem
+  - ✅ Preview instantâneo
+- **Gerenciamento Completo**:
+  - ✅ Drag & Drop para reordenar slides
+  - ✅ Adicionar título (opcional)
+  - ✅ Adicionar subtítulo (opcional)
+  - ✅ Adicionar quantos slides quiser
+  - ✅ Remover slides individualmente
+  - ✅ Numeração automática
+
+### ✅ 3. APARÊNCIA
+- **Cor de Fundo**: Color picker + código hex
+- **Cor Primária (Botões)**: Color picker + código hex
+- **Cor do Texto Principal**: Color picker + código hex (NOVO!)
+- **Cor do Texto Secundário**: Color picker + código hex (NOVO!)
+- **Preview em Tempo Real**: Veja como fica antes de salvar
+
+### ✅ 4. FORMAS DE PAGAMENTO (TOTALMENTE FUNCIONAL!)
+- **Ativar/Desativar** cada forma de pagamento:
+  - 💳 Débito
+  - 💳 Crédito
+  - 📱 PIX
+  - 💵 Dinheiro
+  - 🍱 Vale Alimentação
+  - 🍽️ Vale Refeição
+- **Interface com Toggle Switch** (liga/desliga)
+- **Visual Intuitivo** com ícones
+
+### ✅ 5. ESTATÍSTICAS E RELATÓRIOS (NOVO!)
+- **Métricas em Tempo Real**:
+  - 📊 Pedidos Hoje
+  - 💰 Faturamento Hoje
+  - 📅 Pedidos Esta Semana
+  - 💵 Faturamento Semana
+  - 📆 Pedidos Este Mês
+  - 💸 Faturamento Mês
+  - 🍔 Produto Mais Vendido
+  - 🎯 Ticket Médio
+- **Cards Visuais** com ícones e valores destacados
+- **Histórico de Pedidos**: Em desenvolvimento
+
+---
+
+## 🎨 COMO USAR CADA SEÇÃO
+
+### 📷 UPLOAD DE LOGO (Seção Geral)
+
+#### Passo a Passo:
+1. Vá em **Geral**
+2. Clique em **📁 Escolher Imagem (JPG ou PNG)**
+3. Selecione sua logo do computador
+4. Veja o preview instantâneo
+5. Se quiser trocar, clique em **🗑️ Remover Logo** e faça upload de outra
+6. Clique em **💾 Salvar Alterações**
+
+#### Dicas:
+- Use imagem quadrada (200x200px ideal)
+- Fundo transparente (PNG) fica melhor
+- Logo clara destaca mais
+
+---
+
+### 🎬 GERENCIAR CARROSSEL (Seção Carrossel)
+
+#### Adicionar Novo Slide:
+1. Vá em **Carrossel**
+2. Clique na área **📷 Clique para adicionar imagem (16:9)**
+3. Escolha a imagem (de preferência no formato 16:9, ex: 1920x1080)
+4. Digite o **título** (opcional)
+5. Digite o **subtítulo** (opcional)
+6. Clique em **➕ Adicionar Novo Slide** para criar mais
+
+#### Reordenar Slides (Drag & Drop):
+1. Clique e **segure** no slide que quer mover
+2. **Arraste** para cima ou para baixo
+3. **Solte** na posição desejada
+4. A numeração se ajusta automaticamente
+
+#### Remover Slide:
+1. Clique em **🗑️ Remover** no slide que quer apagar
+2. Pronto! (precisa ter no mínimo 1 slide)
+
+#### Salvar:
+1. Clique em **💾 Salvar Carrossel**
+2. Pronto! As imagens ficam salvas
+
+---
+
+### 🎨 PERSONALIZAR CORES (Seção Aparência)
+
+#### Usando Color Picker:
+1. Vá em **Aparência**
+2. Clique no **quadrado colorido** ao lado do campo
+3. Escolha a cor visualmente
+4. Veja o preview em tempo real embaixo
+
+#### Usando Código Hex:
+1. Digite o código direto no campo (ex: `#E11D48`)
+2. A cor atualiza automaticamente
+
+#### Cores Disponíveis:
+- **Cor de Fundo**: Fundo da tela inicial
+- **Cor Primária**: Cor dos botões principais
+- **Cor do Texto Principal**: Títulos e textos importantes (NOVO!)
+- **Cor do Texto Secundário**: Descrições e textos menores (NOVO!)
+
+#### Ver Preview:
+- Rola a página para baixo
+- Veja uma mini versão da tela com suas cores
+- Teste combinações antes de salvar
+
+---
+
+### 💳 ATIVAR/DESATIVAR PAGAMENTOS (Seção Formas de Pagamento)
+
+#### Como Usar:
+1. Vá em **Formas de Pagamento**
+2. Veja a lista de todas as formas disponíveis
+3. Clique no **toggle** (botão liga/desliga) de cada uma
+4. **Verde** = Ativado ✅
+5. **Cinza** = Desativado ❌
+6. Clique em **💾 Salvar Alterações**
+
+#### Exemplo de Uso:
+- Se sua loja não aceita dinheiro, desative
+- Se não tem máquina de cartão, desative Débito/Crédito
+- Se não quer vales, desative os dois
+
+---
+
+### 📊 VER ESTATÍSTICAS (Seção Estatísticas)
+
+#### Informações Disponíveis:
+- **Pedidos e Faturamento**: Hoje / Semana / Mês
+- **Produto Mais Vendido**: Qual lanche vende mais
+- **Ticket Médio**: Valor médio por pedido
+
+#### Como Usar:
+1. Vá em **Estatísticas**
+2. Veja os cards com os números
+3. Use para tomar decisões (ex: se ticket médio está baixo, criar combos)
+
+#### Futuro:
+- Histórico completo de pedidos
+- Gráficos de vendas
+- Relatórios em PDF
+
+---
+
+## 💾 SALVANDO CONFIGURAÇÕES
+
+### Cada seção tem seu próprio botão salvar:
+
+- **Geral**: Salva nome, texto do botão e logo
+- **Carrossel**: Salva todos os slides
+- **Aparência**: Salva todas as 4 cores
+- **Formas de Pagamento**: Salva quais estão ativas
+- **Estatísticas**: Apenas visualização (não precisa salvar)
+
+---
+
+## 🎯 FLUXO DE TRABALHO IDEAL
+
+### Primeira Configuração:
+1. ✅ **Geral**: Nome da loja + Logo
+2. ✅ **Aparência**: Cores da sua marca
+3. ✅ **Carrossel**: Fotos dos seus produtos
+4. ✅ **Formas de Pagamento**: Ativar só as que você aceita
+5. ✅ Testar no totem
+
+### Dia a Dia:
+1. **Carrossel**: Adicionar promoções novas
+2. **Estatísticas**: Ver como está vendendo
+3. **Formas de Pagamento**: Ajustar conforme necessidade
+
+---
+
+## 🎨 DICAS DE DESIGN
+
+### Logo:
+- Fundo transparente (PNG)
+- Simples e legível
+- Tamanho: 200x200px a 400x400px
+
+### Carrossel:
+- Imagens no formato 16:9 (1920x1080px ideal)
+- Fotos de alta qualidade dos produtos
+- Textos curtos e chamativos
+- Máximo 5-7 slides (não cansar o cliente)
+
+### Cores:
+- **Fundo claro + Texto escuro** = fácil de ler
+- **Botão em cor vibrante** = chama atenção
+- Teste no totem real antes de decidir
+
+---
+
+## 🔥 RECURSOS AVANÇADOS
+
+### Drag & Drop do Carrossel:
+- Arraste com o mouse
+- Funciona em qualquer ordem
+- Solte onde quiser
+- Numeração automática (#1, #2, #3...)
+
+### Preview em Tempo Real:
+- Veja como fica ANTES de salvar
+- Teste combinações de cores
+- Evita erros
+
+### Toggle de Pagamentos:
+- Liga/Desliga com 1 clique
+- Visual claro (verde/cinza)
+- Fácil de gerenciar
+
+---
+
+## 📱 COMPATIBILIDADE
+
+### Upload de Imagens:
+- ✅ Funciona em qualquer navegador moderno
+- ✅ Aceita JPG, PNG, GIF, WebP
+- ✅ Preview instantâneo
+- ✅ Validação de formato
+
+### Drag & Drop:
+- ✅ Mouse (desktop)
+- ✅ Touch (tablets)
+- ✅ Suave e responsivo
+
+---
+
+## 🚀 PRÓXIMAS ATUALIZAÇÕES
+
+### Em Desenvolvimento:
+- [ ] Histórico completo de pedidos
+- [ ] Gráficos de vendas (linha, pizza, barras)
+- [ ] Exportar relatórios em PDF
+- [ ] Editar produtos diretamente
+- [ ] Backup automático de configurações
+
+---
+
+## ✅ CHECKLIST DE CONFIGURAÇÃO INICIAL
+
+Ao configurar pela primeira vez:
+
+- [ ] Nome da loja definido
+- [ ] Logo enviada
+- [ ] Texto do botão personalizado
+- [ ] Cor de fundo escolhida
+- [ ] Cor primária escolhida
+- [ ] Cor do texto principal escolhida
+- [ ] Cor do texto secundário escolhida
+- [ ] Pelo menos 3 slides no carrossel
+- [ ] Formas de pagamento configuradas
+- [ ] Testado no totem/navegador
+
+---
+
+## 🆘 SUPORTE
+
+### Problemas Comuns:
+
+**Logo não aparece:**
+- Verifique se salvou as alterações
+- Confirme que a imagem é JPG ou PNG
+- Tamanho máximo: 5MB
+
+**Carrossel não salva:**
+- Adicione pelo menos 1 imagem
+- Verifique formato da imagem (16:9 ideal)
+- Clique em "Salvar Carrossel"
+
+**Cores não aplicam:**
+- Clique em "Salvar Alterações"
+- Atualize a página do totem
+- Limpe o cache do navegador
+
+---
+
+**Agora você tem o painel admin mais completo do mercado! 🎉**
