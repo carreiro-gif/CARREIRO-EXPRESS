@@ -1,86 +1,116 @@
+// src/context/OrderContext.tsx
 
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
-import { CartItem, Product, OrderType } from '../types';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  imageUrl?: string;
+  observations?: string;
+}
+
+export type OrderType = 'dine-in' | 'takeout';
 
 interface OrderContextType {
+  // Carrinho
   cart: CartItem[];
-  addToCart: (product: Product, quantity: number, modifiers: any[], observations: string) => void;
-  removeFromCart: (cartItemId: string) => void;
-  updateQuantity: (cartItemId: string, delta: number) => void;
+  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  removeFromCart: (itemId: string) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
+  
+  // Totais
+  cartTotal: number;
+  cartCount: number;
+  
+  // Tipo do pedido
   orderType: OrderType | null;
   setOrderType: (type: OrderType) => void;
-  totalAmount: number;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
-export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderType, setOrderType] = useState<OrderType | null>(null);
 
-  const addToCart = useCallback((product: Product, quantity: number, modifiers: any[], observations: string) => {
-    const modifierTotal = modifiers.reduce((acc, m) => acc + m.price, 0);
-    const itemPrice = (product.price + modifierTotal) * quantity;
+  // Adicionar item ao carrinho
+  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
+    setCart((prev) => {
+      // Verificar se o item já existe no carrinho
+      const existingItemIndex = prev.findIndex((i) => i.id === item.id);
 
-    const newItem: CartItem = {
-      id: crypto.randomUUID(),
-      productId: product.id,
-      name: product.name,
-      basePrice: product.price,
-      quantity,
-      totalPrice: itemPrice,
-      selectedModifiers: modifiers,
-      observations
-    };
-
-    setCart(prev => [...prev, newItem]);
-  }, []);
-
-  const removeFromCart = useCallback((id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
-  }, []);
-
-  const updateQuantity = useCallback((id: string, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, item.quantity + delta);
-        const unitPriceWithModifiers = item.totalPrice / item.quantity;
-        return {
-          ...item,
-          quantity: newQty,
-          totalPrice: unitPriceWithModifiers * newQty
-        };
+      if (existingItemIndex > -1) {
+        // Se existe, aumenta a quantidade
+        const updated = [...prev];
+        updated[existingItemIndex].quantity += 1;
+        return updated;
+      } else {
+        // Se não existe, adiciona novo item com quantidade 1
+        return [...prev, { ...item, quantity: 1 }];
       }
-      return item;
-    }));
-  }, []);
+    });
+  };
 
-  const clearCart = useCallback(() => {
+  // Remover item do carrinho
+  const removeFromCart = (itemId: string) => {
+    setCart((prev) => prev.filter((item) => item.id !== itemId));
+  };
+
+  // Atualizar quantidade
+  const updateQuantity = (itemId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(itemId);
+      return;
+    }
+
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id === itemId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  // Limpar carrinho
+  const clearCart = () => {
     setCart([]);
     setOrderType(null);
-  }, []);
+  };
 
-  const totalAmount = useMemo(() => cart.reduce((acc, item) => acc + item.totalPrice, 0), [cart]);
+  // Calcular total do carrinho
+  const cartTotal = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  // Contar itens no carrinho
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <OrderContext.Provider value={{
-      cart,
-      addToCart,
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      orderType,
-      setOrderType,
-      totalAmount
-    }}>
+    <OrderContext.Provider
+      value={{
+        cart,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        cartTotal,
+        cartCount,
+        orderType,
+        setOrderType,
+      }}
+    >
       {children}
     </OrderContext.Provider>
   );
 };
 
-export const useOrder = () => {
+export const useOrder = (): OrderContextType => {
   const context = useContext(OrderContext);
-  if (!context) throw new Error('useOrder must be used within OrderProvider');
+  if (!context) {
+    throw new Error('useOrder must be used within OrderProvider');
+  }
   return context;
 };
