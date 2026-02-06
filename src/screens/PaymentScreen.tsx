@@ -1,338 +1,379 @@
+// src/screens/PaymentScreen.tsx
 
-import React, { useState, useMemo } from 'react';
-import { useOrder } from '../context/OrderContext';
-import { Brendi } from '../services/brendi';
-import { PaymentMethod, OrderPayload, OrderOrigin } from '../types';
-import Header from '../components/Header';
+import React, { useState } from 'react'
+import { theme } from '../theme/theme'
+
+export type PaymentMethod = 
+  | 'debit' 
+  | 'credit' 
+  | 'pix' 
+  | 'cash' 
+  | 'meal-voucher'   // Vale Alimentação
+  | 'food-voucher'   // Vale Refeição
+
+export type MealVoucherBrand = 'pluxee' | 'ticket' | 'vr' | 'alelo' | 'greencard'
+export type FoodVoucherBrand = 'pluxee' | 'ticket' | 'vr' | 'alelo' | 'greencard'
 
 interface PaymentScreenProps {
-  onBack: () => void;
-  onSuccess: (orderId: string) => void;
+  onBack: () => void
+  onSuccess: (orderId: string) => void
+  orderTotal: number
 }
 
-interface PaymentOption {
-  id: PaymentMethod;
-  label: string;
-  icon: string;
-}
+const PaymentScreen: React.FC<PaymentScreenProps> = ({ onBack, onSuccess, orderTotal }) => {
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
+  const [showVoucherModal, setShowVoucherModal] = useState(false)
+  const [voucherType, setVoucherType] = useState<'meal' | 'food' | null>(null)
+  const [selectedVoucherBrand, setSelectedVoucherBrand] = useState<string | null>(null)
 
-const PAYMENT_OPTIONS: PaymentOption[] = [
-  { id: 'CREDITO', label: 'Cartão de Crédito', icon: '💳' },
-  { id: 'DEBITO', label: 'Cartão de Débito', icon: '💳' },
-  { id: 'PIX', label: 'PIX (QR Code)', icon: '📱' },
-  { id: 'DINHEIRO', label: 'Dinheiro', icon: '💵' },
-  { id: 'VALE_REFEICAO', label: 'Vale Refeição', icon: '🎟️' },
-  { id: 'VALE_ALIMENTACAO', label: 'Vale Alimentação', icon: '🛒' },
-];
-
-const VOUCHER_BRANDS = ['Sodexo', 'VR', 'Green-card', 'Alelo', 'Ticket'];
-
-type SubStep = 'SELECTION' | 'CASH_CHANGE' | 'VOUCHER_INFO';
-
-const PaymentScreen: React.FC<PaymentScreenProps> = ({ onBack, onSuccess }) => {
-  const { cart, totalAmount, orderType } = useOrder();
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>(null);
-  const [subStep, setSubStep] = useState<SubStep>('SELECTION');
-  const [isProcessing, setIsProcessing] = useState(false);
-  
-  // Cash details
-  const [needsChange, setNeedsChange] = useState<boolean | null>(null);
-  const [changeFor, setChangeFor] = useState<string>('');
-
-  // Voucher details
-  const [selectedVoucherBrand, setSelectedVoucherBrand] = useState<string | null>(null);
-
-  const calculatedChange = useMemo(() => {
-    const value = parseFloat(changeFor);
-    if (isNaN(value) || value <= totalAmount) return 0;
-    return value - totalAmount;
-  }, [changeFor, totalAmount]);
-
-  const handleSelectPayment = (method: PaymentMethod) => {
-    setSelectedPayment(method);
-    // Reset specific details when switching methods
-    setNeedsChange(null);
-    setChangeFor('');
-    setSelectedVoucherBrand(null);
-
-    if (method === 'DINHEIRO') {
-      setSubStep('CASH_CHANGE');
-    } else if (method === 'VALE_REFEICAO' || method === 'VALE_ALIMENTACAO') {
-      setSubStep('VOUCHER_INFO');
+  const handleSelectMethod = (method: PaymentMethod) => {
+    if (method === 'meal-voucher' || method === 'food-voucher') {
+      setVoucherType(method === 'meal-voucher' ? 'meal' : 'food')
+      setShowVoucherModal(true)
     } else {
-      setSubStep('SELECTION');
+      setSelectedMethod(method)
     }
-  };
+  }
 
-  const isCurrentSelectionValid = useMemo(() => {
-    if (!selectedPayment) return false;
-    if (selectedPayment === 'DINHEIRO') {
-      if (needsChange === null) return false;
-      if (needsChange === true && calculatedChange <= 0) return false;
-      return true;
-    }
-    if (selectedPayment === 'VALE_REFEICAO' || selectedPayment === 'VALE_ALIMENTACAO') {
-      return !!selectedVoucherBrand;
-    }
-    return true; // PIX, Crédito, Débito
-  }, [selectedPayment, needsChange, calculatedChange, selectedVoucherBrand]);
+  const handleSelectVoucherBrand = (brand: string) => {
+    setSelectedVoucherBrand(brand)
+    setShowVoucherModal(false)
+    setSelectedMethod(voucherType === 'meal' ? 'meal-voucher' : 'food-voucher')
+  }
 
-  const handleFinishOrder = async () => {
-    if (!isCurrentSelectionValid || cart.length === 0) return;
+  const handleConfirmPayment = () => {
+    // Aqui você faria a integração com a Brendi
+    // Por enquanto, simula sucesso
+    const mockOrderId = `ORD-${Date.now()}`
+    onSuccess(mockOrderId)
+  }
 
-    setIsProcessing(true);
-    
-    const payload: OrderPayload = {
-      origin: OrderOrigin.TOTEM,
-      type: orderType!,
-      items: cart,
-      paymentMethod: selectedPayment!,
-      paymentDetails: {
-        needsChange: needsChange === true,
-        changeFor: needsChange ? parseFloat(changeFor) : undefined,
-        voucherBrand: selectedVoucherBrand || undefined
-      },
-      total: totalAmount
-    };
+  const paymentMethods = [
+    { id: 'debit' as PaymentMethod, icon: '💳', title: 'Débito', subtitle: 'Cartão de débito' },
+    { id: 'credit' as PaymentMethod, icon: '💳', title: 'Crédito', subtitle: 'Cartão de crédito' },
+    { id: 'pix' as PaymentMethod, icon: '📱', title: 'PIX', subtitle: 'QR Code instantâneo' },
+    { id: 'cash' as PaymentMethod, icon: '💵', title: 'Dinheiro', subtitle: 'Precisa de troco?' },
+    { id: 'meal-voucher' as PaymentMethod, icon: '🍱', title: 'Vale Alimentação', subtitle: 'Pluxee, Ticket, VR...' },
+    { id: 'food-voucher' as PaymentMethod, icon: '🍽️', title: 'Vale Refeição', subtitle: 'Pluxee, Ticket, VR...' },
+  ]
 
-    try {
-      const res = await Brendi.createOrder(payload);
-      if (res.success && res.orderId) {
-        onSuccess(res.orderId);
-      }
-    } catch (error: any) {
-      alert(error.message || "Erro ao processar o pagamento.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const renderSelection = () => (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="text-center mb-12">
-        <h2 className="text-5xl font-black text-gray-900 tracking-tighter mb-4">Forma de Pagamento</h2>
-        <p className="text-2xl text-gray-400 font-medium">Como deseja pagar seu pedido?</p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-        {PAYMENT_OPTIONS.map((option) => (
-          <button
-            key={option.id}
-            onClick={() => handleSelectPayment(option.id)}
-            className={`flex flex-col items-center gap-4 p-8 rounded-[2.5rem] border-4 transition-all active:scale-95 shadow-lg ${
-              selectedPayment === option.id
-                ? 'border-primary bg-rose-50'
-                : 'border-white bg-white hover:border-gray-200'
-            }`}
-          >
-            <span className="text-6xl">{option.icon}</span>
-            <span className={`text-xl font-black tracking-tight ${
-                selectedPayment === option.id ? 'text-primary' : 'text-gray-700'
-            }`}>
-                {option.label}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderCashChange = () => (
-    <div className="animate-in fade-in slide-in-from-right-8 duration-500 max-w-2xl mx-auto w-full">
-      <div className="text-center mb-10">
-        <div className="text-7xl mb-4">💵</div>
-        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Pagamento em Dinheiro</h2>
-        <p className="text-xl text-gray-400 font-medium">Você precisa de troco?</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6 mb-10">
-        <button
-          onClick={() => { setNeedsChange(false); setSubStep('SELECTION'); }}
-          className={`p-10 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-4 shadow-md ${
-            needsChange === false ? 'border-primary bg-rose-50' : 'bg-white border-transparent'
-          }`}
-        >
-          <span className="text-4xl">🙅‍♂️</span>
-          <span className="text-xl font-black text-gray-700">Não preciso</span>
-        </button>
-        <button
-          onClick={() => setNeedsChange(true)}
-          className={`p-10 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-4 shadow-md ${
-            needsChange === true ? 'border-primary bg-rose-50' : 'bg-white border-transparent'
-          }`}
-        >
-          <span className="text-4xl">🙋‍♂️</span>
-          <span className="text-xl font-black text-gray-700">Preciso de troco</span>
-        </button>
-      </div>
-
-      {needsChange && (
-        <div className="animate-in zoom-in-95 duration-300">
-          <label className="block text-gray-500 font-bold mb-4 text-center">Troco para quanto?</label>
-          <div className="relative max-w-xs mx-auto">
-            <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-gray-400">R$</span>
-            <input
-              type="number"
-              value={changeFor}
-              onChange={(e) => setChangeFor(e.target.value)}
-              placeholder="0,00"
-              className="w-full pl-16 pr-8 py-6 bg-white rounded-2xl border-4 border-gray-100 text-3xl font-black text-gray-900 focus:border-primary outline-none text-center"
-            />
-          </div>
-
-          {calculatedChange > 0 && (
-            <div className="mt-8 p-8 bg-green-50 border-2 border-green-100 rounded-[2rem] text-center animate-in fade-in slide-in-from-bottom-4">
-               <p className="text-green-800 font-bold text-xl uppercase tracking-widest mb-2">Troco Calculado</p>
-               <h4 className="text-4xl font-black text-green-600">
-                 Você receberá R$ {calculatedChange.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de troco
-               </h4>
-            </div>
-          )}
-
-          <button 
-            onClick={() => setSubStep('SELECTION')}
-            disabled={calculatedChange <= 0}
-            className="w-full mt-8 bg-gray-900 text-white py-6 rounded-[2rem] font-black text-2xl active:scale-95 transition-all disabled:opacity-30 disabled:scale-100"
-          >
-            CONFIRMAR TROCO
-          </button>
-          
-          {changeFor && parseFloat(changeFor) <= totalAmount && (
-            <p className="text-rose-500 text-center mt-4 font-bold">O valor do pagamento deve ser maior que o total (R$ {totalAmount.toFixed(2)}).</p>
-          )}
-        </div>
-      )}
-
-      <button onClick={() => { setSelectedPayment(null); setSubStep('SELECTION'); setNeedsChange(null); }} className="mt-8 mx-auto block text-gray-400 font-bold hover:underline">
-        Voltar e escolher outra forma
-      </button>
-    </div>
-  );
-
-  const renderVoucherInfo = () => (
-    <div className="animate-in fade-in slide-in-from-right-8 duration-500 max-w-2xl mx-auto w-full">
-      <div className="text-center mb-10">
-        <div className="text-7xl mb-4">🎟️</div>
-        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Selecione a Bandeira</h2>
-        <p className="text-xl text-gray-400 font-medium">Qual cartão de benefício você irá utilizar?</p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 mb-10">
-        {VOUCHER_BRANDS.map(brand => (
-          <button 
-            key={brand} 
-            onClick={() => setSelectedVoucherBrand(brand)}
-            className={`flex items-center justify-between p-6 rounded-2xl border-4 transition-all active:scale-[0.98] ${
-                selectedVoucherBrand === brand 
-                ? 'border-primary bg-rose-50 shadow-md' 
-                : 'border-white bg-white hover:border-gray-100'
-            }`}
-          >
-             <div className="flex items-center gap-6">
-                <div className={`w-5 h-5 rounded-full border-4 ${selectedVoucherBrand === brand ? 'bg-primary border-primary' : 'border-gray-200'}`}></div>
-                <span className={`text-2xl font-black ${selectedVoucherBrand === brand ? 'text-primary' : 'text-gray-800'}`}>{brand}</span>
-             </div>
-             {selectedVoucherBrand === brand && (
-                 <span className="text-primary font-black text-xs uppercase tracking-widest bg-white px-3 py-1 rounded-full">Selecionado</span>
-             )}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <button 
-          onClick={() => setSubStep('SELECTION')}
-          disabled={!selectedVoucherBrand}
-          className={`w-full py-8 rounded-[2rem] font-black text-2xl shadow-xl transition-all active:scale-95 ${
-            selectedVoucherBrand 
-            ? 'bg-primary text-white' 
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          CONFIRMAR BANDEIRA
-        </button>
-        <button 
-          onClick={() => { setSelectedPayment(null); setSubStep('SELECTION'); setSelectedVoucherBrand(null); }} 
-          className="text-gray-400 font-bold hover:underline py-4"
-        >
-          Voltar e escolher outra forma
-        </button>
-      </div>
-    </div>
-  );
+  const voucherBrands = [
+    { id: 'pluxee', name: 'Pluxee', icon: '🟣' },
+    { id: 'ticket', name: 'Ticket', icon: '🟠' },
+    { id: 'vr', name: 'VR', icon: '🔵' },
+    { id: 'alelo', name: 'Alelo', icon: '🟢' },
+    { id: 'greencard', name: 'Green Card', icon: '🟢' },
+  ]
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
-      <Header onHome={onBack} />
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <button style={styles.backButton} onClick={onBack}>
+          ← Voltar
+        </button>
+        <h1 style={styles.headerTitle}>Pagamento</h1>
+      </div>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
-        <div className="max-w-4xl w-full py-10">
-          
-          {subStep === 'SELECTION' && renderSelection()}
-          {subStep === 'CASH_CHANGE' && renderCashChange()}
-          {subStep === 'VOUCHER_INFO' && renderVoucherInfo()}
-
-          {/* Resumo e Ação Final (Apenas quando no passo principal) */}
-          {subStep === 'SELECTION' && (
-            <div className="bg-white rounded-[3rem] p-10 shadow-xl border border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-8 animate-in slide-in-from-bottom-8 duration-700">
-              <div className="text-center sm:text-left">
-                <span className="text-gray-400 font-bold uppercase tracking-widest text-sm">Total do Pedido</span>
-                <div className="text-5xl font-black text-gray-900">
-                  R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
-                {selectedPayment && (
-                    <div className="mt-3 flex flex-col gap-1">
-                        <div className="text-primary font-black uppercase text-xs tracking-widest flex items-center gap-2">
-                           <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                           PAGAMENTO: {PAYMENT_OPTIONS.find(o => o.id === selectedPayment)?.label}
-                        </div>
-                        {selectedPayment === 'DINHEIRO' && needsChange !== null && (
-                            <div className="text-gray-500 font-bold text-sm">
-                                {needsChange ? `Receberá R$ ${calculatedChange.toFixed(2)} de troco` : 'Sem troco necessário'}
-                            </div>
-                        )}
-                        {(selectedPayment === 'VALE_REFEICAO' || selectedPayment === 'VALE_ALIMENTACAO') && selectedVoucherBrand && (
-                            <div className="text-gray-500 font-bold text-sm">
-                                Bandeira: {selectedVoucherBrand}
-                            </div>
-                        )}
-                    </div>
-                )}
-              </div>
-
-              <button
-                disabled={!isCurrentSelectionValid || isProcessing}
-                onClick={handleFinishOrder}
-                className={`px-16 py-8 rounded-[2rem] text-3xl font-black shadow-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-4 ${
-                  isCurrentSelectionValid && !isProcessing
-                    ? 'bg-primary text-white shadow-rose-200 hover:brightness-110'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>ENVIANDO...</span>
-                  </>
-                ) : (
-                  <span>FINALIZAR PEDIDO</span>
-                )}
-              </button>
-            </div>
-          )}
-          
-          {subStep === 'SELECTION' && (
-            <button 
-                onClick={onBack}
-                className="mt-10 mx-auto block text-gray-400 font-black text-xl hover:text-gray-600 transition-colors"
-            >
-                VOLTAR AO CARRINHO
-            </button>
-          )}
+      {/* Conteúdo */}
+      <div style={styles.content}>
+        <h2 style={styles.title}>Escolha a forma de pagamento</h2>
+        
+        {/* Total do pedido */}
+        <div style={styles.totalBox}>
+          <span style={styles.totalLabel}>Total do pedido:</span>
+          <span style={styles.totalValue}>
+            R$ {orderTotal.toFixed(2).replace('.', ',')}
+          </span>
         </div>
-      </main>
-    </div>
-  );
-};
 
-export default PaymentScreen;
+        {/* Grid de métodos de pagamento */}
+        <div style={styles.paymentGrid}>
+          {paymentMethods.map((method) => (
+            <button
+              key={method.id}
+              style={{
+                ...styles.paymentButton,
+                borderColor: selectedMethod === method.id
+                  ? theme.colors.primary.main
+                  : theme.colors.neutral.gray[300],
+                backgroundColor: selectedMethod === method.id
+                  ? `${theme.colors.primary.main}15`
+                  : theme.colors.background.paper,
+              }}
+              onClick={() => handleSelectMethod(method.id)}
+            >
+              <div style={styles.paymentIcon}>{method.icon}</div>
+              <h3 style={styles.paymentTitle}>{method.title}</h3>
+              <p style={styles.paymentSubtitle}>{method.subtitle}</p>
+              
+              {selectedMethod === method.id && (
+                <div style={styles.checkmark}>✓</div>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Botão confirmar */}
+        {selectedMethod && (
+          <button
+            style={styles.confirmButton}
+            onClick={handleConfirmPayment}
+          >
+            CONFIRMAR PAGAMENTO
+          </button>
+        )}
+      </div>
+
+      {/* Modal de escolha de bandeira de vale */}
+      {showVoucherModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowVoucherModal(false)}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <h2 style={styles.modalTitle}>
+              Escolha a bandeira do {voucherType === 'meal' ? 'Vale Alimentação' : 'Vale Refeição'}
+            </h2>
+            
+            <div style={styles.voucherGrid}>
+              {voucherBrands.map((brand) => (
+                <button
+                  key={brand.id}
+                  style={styles.voucherButton}
+                  onClick={() => handleSelectVoucherBrand(brand.id)}
+                >
+                  <div style={styles.voucherIcon}>{brand.icon}</div>
+                  <span style={styles.voucherName}>{brand.name}</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              style={styles.modalCloseButton}
+              onClick={() => setShowVoucherModal(false)}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    width: '100%',
+    minHeight: '100vh',
+    backgroundColor: theme.colors.background.default,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing.lg,
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.background.paper,
+    boxShadow: theme.shadows.sm,
+  },
+
+  backButton: {
+    padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    backgroundColor: theme.colors.neutral.gray[100],
+    border: 'none',
+    borderRadius: theme.borderRadius.md,
+    cursor: 'pointer',
+  },
+
+  headerTitle: {
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    margin: 0,
+  },
+
+  content: {
+    flex: 1,
+    padding: theme.spacing['2xl'],
+    maxWidth: '1200px',
+    margin: '0 auto',
+    width: '100%',
+  },
+
+  title: {
+    fontSize: theme.typography.fontSize['3xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    textAlign: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+
+  totalBox: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.background.paper,
+    borderRadius: theme.borderRadius.lg,
+    marginBottom: theme.spacing['2xl'],
+    boxShadow: theme.shadows.md,
+  },
+
+  totalLabel: {
+    fontSize: theme.typography.fontSize.xl,
+    color: theme.colors.neutral.gray[600],
+  },
+
+  totalValue: {
+    fontSize: theme.typography.fontSize['4xl'],
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.primary.main,
+  },
+
+  paymentGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: theme.spacing.lg,
+    marginBottom: theme.spacing['2xl'],
+  },
+
+  paymentButton: {
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.md,
+    padding: theme.spacing.xl,
+    minHeight: '180px',
+    border: '3px solid',
+    borderRadius: theme.borderRadius.xl,
+    cursor: 'pointer',
+    transition: `all ${theme.transitions.fast}`,
+    boxShadow: theme.shadows.sm,
+  },
+
+  paymentIcon: {
+    fontSize: '64px',
+    lineHeight: 1,
+  },
+
+  paymentTitle: {
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    margin: 0,
+  },
+
+  paymentSubtitle: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.neutral.gray[600],
+    margin: 0,
+    textAlign: 'center',
+  },
+
+  checkmark: {
+    position: 'absolute',
+    top: theme.spacing.md,
+    right: theme.spacing.md,
+    width: '32px',
+    height: '32px',
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary.main,
+    color: theme.colors.neutral.white,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+
+  confirmButton: {
+    width: '100%',
+    maxWidth: '500px',
+    margin: '0 auto',
+    display: 'block',
+    padding: `${theme.spacing.xl} ${theme.spacing['2xl']}`,
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    backgroundColor: theme.colors.primary.main,
+    color: theme.colors.neutral.white,
+    border: 'none',
+    borderRadius: theme.borderRadius.lg,
+    cursor: 'pointer',
+    boxShadow: theme.shadows.xl,
+    transition: `all ${theme.transitions.fast}`,
+  },
+
+  // Modal de vales
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: theme.spacing.xl,
+  },
+
+  modal: {
+    backgroundColor: theme.colors.background.paper,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing['2xl'],
+    maxWidth: '600px',
+    width: '100%',
+    boxShadow: theme.shadows['2xl'],
+  },
+
+  modalTitle: {
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    textAlign: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+
+  voucherGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
+  },
+
+  voucherButton: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background.default,
+    border: `2px solid ${theme.colors.neutral.gray[300]}`,
+    borderRadius: theme.borderRadius.md,
+    cursor: 'pointer',
+    transition: `all ${theme.transitions.fast}`,
+  },
+
+  voucherIcon: {
+    fontSize: '48px',
+  },
+
+  voucherName: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+
+  modalCloseButton: {
+    width: '100%',
+    padding: theme.spacing.lg,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    backgroundColor: theme.colors.neutral.gray[200],
+    border: 'none',
+    borderRadius: theme.borderRadius.md,
+    cursor: 'pointer',
+  },
+}
+
+export default PaymentScreen
