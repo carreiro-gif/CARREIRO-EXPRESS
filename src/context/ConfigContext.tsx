@@ -1,60 +1,74 @@
+// src/context/ConfigContext.tsx
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { KioskConfig } from '../types';
+import React, { createContext, useContext, useState, ReactNode } from 'react'
 
-interface ConfigContextType {
-  config: KioskConfig;
-  updateConfig: (newConfig: Partial<KioskConfig>) => void;
-  resetConfig: () => void;
+export interface StoreConfig {
+  storeName: string
+  logoUrl: string | null
+  buttonText: string
+  backgroundColor: string
+  primaryColor: string
+  // Configurações de carrossel
+  carouselSlides: Array<{
+    id: string
+    imageUrl: string
+    title?: string
+    subtitle?: string
+  }>
 }
 
-const DEFAULT_CONFIG: KioskConfig = {
-  storeName: 'Totem Burger',
-  slogan: 'Powered by Brendi',
-  logoImage: null,
+interface ConfigContextType {
+  config: StoreConfig
+  updateConfig: (newConfig: Partial<StoreConfig>) => void
+  resetConfig: () => void
+}
+
+const defaultConfig: StoreConfig = {
+  storeName: 'CARREIRO LANCHES',
+  logoUrl: null,
+  buttonText: 'PEÇA AQUI',
+  backgroundColor: '#F9FAFB',
   primaryColor: '#E11D48',
-  backgroundColor: '#E11D48',
-  welcomeTitle: 'Bateu aquela fome?',
-  welcomeSubtitle: 'Peça agora de forma rápida e retire seu pedido no balcão quando estiver pronto!',
-  adminPin: '1234',
-  dineInButtonTitle: 'Comer aqui',
-  dineInButtonSubtitle: 'Servido no balcão',
-  takeOutButtonTitle: 'Para levar',
-  takeOutButtonSubtitle: 'Embalagem especial',
-};
+  carouselSlides: [
+    {
+      id: '1',
+      imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200&h=675&fit=crop',
+      title: 'Combo X-Bacon + Batata + Refri',
+      subtitle: 'Por apenas R$ 35,90 - Oferta válida hoje!',
+    },
+    {
+      id: '2',
+      imageUrl: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=1200&h=675&fit=crop',
+      title: 'Novidade: X-Carreiro Supreme',
+      subtitle: 'Hambúrguer artesanal com bacon crocante',
+    },
+  ],
+}
 
-const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
+const ConfigContext = createContext<ConfigContextType | undefined>(undefined)
 
-export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [config, setConfig] = useState<KioskConfig>(() => {
-    const saved = localStorage.getItem('kiosk_config');
-    return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
-  });
+export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [config, setConfig] = useState<StoreConfig>(defaultConfig)
 
-  useEffect(() => {
-    localStorage.setItem('kiosk_config', JSON.stringify(config));
-    // Aplica as variáveis CSS globais para cores dinâmicas
-    document.documentElement.style.setProperty('--primary-color', config.primaryColor);
-    document.documentElement.style.setProperty('--bg-color', config.backgroundColor);
-  }, [config]);
-
-  const updateConfig = (newConfig: Partial<KioskConfig>) => {
-    setConfig(prev => ({ ...prev, ...newConfig }));
-  };
+  const updateConfig = (newConfig: Partial<StoreConfig>) => {
+    setConfig((prev) => ({ ...prev, ...newConfig }))
+  }
 
   const resetConfig = () => {
-    setConfig(DEFAULT_CONFIG);
-  };
+    setConfig(defaultConfig)
+  }
 
   return (
     <ConfigContext.Provider value={{ config, updateConfig, resetConfig }}>
       {children}
     </ConfigContext.Provider>
-  );
-};
+  )
+}
 
-export const useConfig = () => {
-  const context = useContext(ConfigContext);
-  if (!context) throw new Error('useConfig must be used within ConfigProvider');
-  return context;
-};
+export const useConfig = (): ConfigContextType => {
+  const context = useContext(ConfigContext)
+  if (!context) {
+    throw new Error('useConfig must be used within ConfigProvider')
+  }
+  return context
+}
