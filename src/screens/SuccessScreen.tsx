@@ -1,6 +1,7 @@
+// src/screens/SuccessScreen.tsx
 
-import React, { useEffect, useState } from 'react';
-import { useOrder } from '../context/OrderContext';
+import React, { useEffect } from 'react';
+import { theme } from '../theme/theme';
 
 interface SuccessScreenProps {
   orderId: string;
@@ -8,69 +9,147 @@ interface SuccessScreenProps {
 }
 
 const SuccessScreen: React.FC<SuccessScreenProps> = ({ orderId, onFinish }) => {
-  const { clearCart } = useOrder();
-  const [countdown, setCountdown] = useState(15);
-
+  // Auto-redirecionar após 10 segundos
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          onFinish();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const timer = setTimeout(() => {
+      onFinish();
+    }, 10000);
 
-    return () => clearInterval(timer);
+    return () => clearTimeout(timer);
   }, [onFinish]);
 
   return (
-    <div className="h-full flex flex-col items-center justify-center bg-white p-6">
-      <div className="max-w-3xl w-full text-center">
-        <div className="mb-12">
-            <div className="w-56 h-56 bg-green-50 rounded-full mx-auto flex items-center justify-center animate-bounce shadow-inner border-4 border-green-100">
-                <svg className="w-28 h-28 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-        </div>
+    <div style={styles.container}>
+      {/* Ícone de sucesso */}
+      <div style={styles.iconWrapper}>
+        <div style={styles.checkIcon}>✓</div>
+      </div>
 
-        <h1 className="text-7xl font-black text-gray-900 mb-6 tracking-tighter leading-tight">
-          Pedido Confirmado!
-        </h1>
-        
-        <p className="text-3xl text-gray-400 font-medium mb-12 max-w-2xl mx-auto">
-          Obrigado pela preferência! Seu pedido já está sendo preparado pela nossa equipe.
+      {/* Mensagem principal */}
+      <h1 style={styles.title}>Pedido Confirmado!</h1>
+      
+      {/* Número do pedido */}
+      <div style={styles.orderBox}>
+        <p style={styles.orderLabel}>Número do pedido</p>
+        <p style={styles.orderNumber}>#{orderId}</p>
+      </div>
+
+      {/* Instruções */}
+      <div style={styles.instructions}>
+        <p style={styles.instructionText}>
+          🔔 Aguarde a chamada do seu pedido
         </p>
-
-        <div className="space-y-6 max-w-xl mx-auto">
-            <div className="p-10 bg-gray-50 rounded-[2.5rem] border-2 border-gray-100 text-left flex items-start gap-8">
-                <span className="text-5xl">✅</span>
-                <div>
-                    <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Tudo pronto</h3>
-                    <p className="text-gray-500 text-lg font-medium mt-2 leading-relaxed">
-                        Retire seu pedido no balcão assim que seu nome for chamado. <br/>
-                        Acompanhe o status pelo monitor da loja.
-                    </p>
-                </div>
-            </div>
-
-            <button
-                onClick={onFinish}
-                className="w-full bg-gray-900 text-white text-3xl font-black py-9 rounded-[2.5rem] shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-4"
-            >
-                VOLTAR AO INÍCIO 
-                <span className="bg-white/20 px-4 py-1 rounded-full text-xl">{countdown}s</span>
-            </button>
-        </div>
-
-        <p className="mt-12 text-gray-300 font-bold uppercase tracking-widest text-sm">
-           ID do Pedido: {orderId}
+        <p style={styles.instructionText}>
+          ⏱️ Tempo estimado: 10-15 minutos
         </p>
       </div>
+
+      {/* Botão para fazer novo pedido */}
+      <button style={styles.finishButton} onClick={onFinish}>
+        FAZER NOVO PEDIDO
+      </button>
+
+      {/* Mensagem de auto-redirecionamento */}
+      <p style={styles.autoRedirect}>
+        Voltando para o início em 10 segundos...
+      </p>
     </div>
   );
+};
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+    backgroundColor: theme.colors.background.default,
+    padding: theme.spacing['3xl'],
+    textAlign: 'center',
+  },
+
+  iconWrapper: {
+    marginBottom: theme.spacing['2xl'],
+  },
+
+  checkIcon: {
+    width: '120px',
+    height: '120px',
+    borderRadius: '50%',
+    backgroundColor: theme.colors.success,
+    color: theme.colors.neutral.white,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '72px',
+    fontWeight: theme.typography.fontWeight.bold,
+    boxShadow: theme.shadows.xl,
+    animation: 'scaleIn 0.5s ease-out',
+  },
+
+  title: {
+    fontSize: theme.typography.fontSize['5xl'],
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.neutral.gray[900],
+    marginBottom: theme.spacing.xl,
+  },
+
+  orderBox: {
+    backgroundColor: theme.colors.background.paper,
+    padding: theme.spacing['2xl'],
+    borderRadius: theme.borderRadius.xl,
+    boxShadow: theme.shadows.lg,
+    marginBottom: theme.spacing['2xl'],
+    minWidth: '400px',
+  },
+
+  orderLabel: {
+    fontSize: theme.typography.fontSize.lg,
+    color: theme.colors.neutral.gray[600],
+    margin: 0,
+    marginBottom: theme.spacing.sm,
+  },
+
+  orderNumber: {
+    fontSize: theme.typography.fontSize['4xl'],
+    fontWeight: theme.typography.fontWeight.extrabold,
+    color: theme.colors.primary.main,
+    margin: 0,
+  },
+
+  instructions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing['2xl'],
+  },
+
+  instructionText: {
+    fontSize: theme.typography.fontSize.xl,
+    color: theme.colors.neutral.gray[700],
+    margin: 0,
+  },
+
+  finishButton: {
+    padding: `${theme.spacing.xl} ${theme.spacing['3xl']}`,
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    backgroundColor: theme.colors.primary.main,
+    color: theme.colors.neutral.white,
+    border: 'none',
+    borderRadius: theme.borderRadius.lg,
+    cursor: 'pointer',
+    boxShadow: theme.shadows.lg,
+    transition: `all ${theme.transitions.fast}`,
+    marginBottom: theme.spacing.lg,
+  },
+
+  autoRedirect: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.neutral.gray[500],
+    margin: 0,
+  },
 };
 
 export default SuccessScreen;
