@@ -1,6 +1,6 @@
 // src/screens/HomeScreen.tsx
 
-import React from 'react'
+import React, { useState, useRef } from 'react'
 import { Carousel, CarouselSlide } from '../components/Carousel/Carousel'
 import { theme } from '../theme/theme'
 import { useConfig } from '../context/ConfigContext'
@@ -33,14 +33,63 @@ const mockSlides: CarouselSlide[] = [
 ]
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
-  // Pegar configurações personalizadas (logo, nome, cor, texto do botão)
-  const config = useConfig ? useConfig() : null
+  // Pegar configurações personalizadas
+  const config = useConfig ? useConfig()?.config : null
   
   const storeName = config?.storeName || 'CARREIRO LANCHES'
   const logoUrl = config?.logoUrl || null
   const buttonText = config?.buttonText || 'PEÇA AQUI'
   const backgroundColor = config?.backgroundColor || theme.colors.background.default
   const primaryColor = config?.primaryColor || theme.colors.primary.main
+
+  // Sistema de cliques secretos para acessar admin
+  const [clickCount, setClickCount] = useState(0)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [password, setPassword] = useState('')
+  const clickTimeout = useRef<NodeJS.Timeout | null>(null)
+
+  // Senha padrão (pode ser configurada depois)
+  const ADMIN_PASSWORD = '1234'
+  const CLICKS_NEEDED = 3
+
+  // Handler de cliques na logo
+  const handleLogoClick = () => {
+    // Incrementar contador
+    const newCount = clickCount + 1
+    setClickCount(newCount)
+
+    // Limpar timeout anterior
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current)
+    }
+
+    // Se atingiu os cliques necessários, mostrar modal de senha
+    if (newCount >= CLICKS_NEEDED) {
+      setShowPasswordModal(true)
+      setClickCount(0)
+    } else {
+      // Resetar contador após 2 segundos
+      clickTimeout.current = setTimeout(() => {
+        setClickCount(0)
+      }, 2000)
+    }
+  }
+
+  // Verificar senha
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (password === ADMIN_PASSWORD) {
+      setShowPasswordModal(false)
+      setPassword('')
+      if (onOpenConfig) {
+        onOpenConfig()
+      }
+    } else {
+      alert('❌ Senha incorreta!')
+      setPassword('')
+    }
+  }
 
   return (
     <div style={{ ...styles.container, backgroundColor }}>
@@ -58,8 +107,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
 
       {/* Conteúdo central */}
       <div style={styles.content}>
-        {/* Logo + Nome da loja */}
-        <div style={styles.logoSection}>
+        {/* Logo + Nome da loja (CLICÁVEL PARA ADMIN) */}
+        <div 
+          style={styles.logoSection}
+          onClick={handleLogoClick}
+        >
           {/* Logo (se configurada) */}
           {logoUrl && (
             <img
@@ -102,15 +154,57 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
         </div>
       </div>
 
-      {/* Botão de configuração (canto inferior direito, semi-oculto) */}
-      {onOpenConfig && (
-        <button
-          style={styles.configButton}
-          onClick={onOpenConfig}
-          title="Configurações (Admin)"
+      {/* Modal de senha do admin */}
+      {showPasswordModal && (
+        <div 
+          style={styles.modalOverlay}
+          onClick={() => {
+            setShowPasswordModal(false)
+            setPassword('')
+          }}
         >
-          ⚙️
-        </button>
+          <div 
+            style={styles.modal}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={styles.modalTitle}>🔒 Acesso Administrativo</h2>
+            <p style={styles.modalSubtitle}>Digite a senha para continuar</p>
+            
+            <form onSubmit={handlePasswordSubmit}>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Digite a senha"
+                style={styles.passwordInput}
+                autoFocus
+              />
+              
+              <div style={styles.modalButtons}>
+                <button
+                  type="button"
+                  style={styles.cancelButton}
+                  onClick={() => {
+                    setShowPasswordModal(false)
+                    setPassword('')
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  style={styles.confirmButton}
+                >
+                  Entrar
+                </button>
+              </div>
+            </form>
+
+            <p style={styles.hint}>
+              💡 Dica: Clique 3 vezes na logo para abrir este menu
+            </p>
+          </div>
+        </div>
       )}
     </div>
   )
@@ -148,6 +242,8 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     gap: theme.spacing.md,
+    cursor: 'pointer', // Indicar que é clicável
+    userSelect: 'none', // Evitar seleção de texto ao clicar rápido
   },
 
   logoImage: {
@@ -155,6 +251,7 @@ const styles: Record<string, React.CSSProperties> = {
     maxHeight: '200px',
     objectFit: 'contain',
     marginBottom: theme.spacing.md,
+    pointerEvents: 'none', // Evitar arrastar imagem
   },
 
   storeName: {
@@ -224,20 +321,95 @@ const styles: Record<string, React.CSSProperties> = {
     color: theme.colors.neutral.gray[600],
   },
 
-  configButton: {
+  // Modal de senha
+  modalOverlay: {
     position: 'fixed',
-    bottom: theme.spacing.lg,
-    right: theme.spacing.lg,
-    width: '56px',
-    height: '56px',
-    borderRadius: theme.borderRadius.full,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: theme.spacing.xl,
+  },
+
+  modal: {
+    backgroundColor: theme.colors.background.paper,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing['3xl'],
+    maxWidth: '500px',
+    width: '100%',
+    boxShadow: theme.shadows['2xl'],
+  },
+
+  modalTitle: {
+    fontSize: theme.typography.fontSize['3xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    textAlign: 'center',
+    marginBottom: theme.spacing.sm,
+    color: theme.colors.neutral.gray[900],
+  },
+
+  modalSubtitle: {
+    fontSize: theme.typography.fontSize.lg,
+    color: theme.colors.neutral.gray[600],
+    textAlign: 'center',
+    marginBottom: theme.spacing['2xl'],
+  },
+
+  passwordInput: {
+    width: '100%',
+    padding: theme.spacing.lg,
+    fontSize: theme.typography.fontSize.xl,
+    border: `2px solid ${theme.colors.neutral.gray[300]}`,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.lg,
+    textAlign: 'center',
+    letterSpacing: '0.3em',
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+
+  modalButtons: {
+    display: 'flex',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+  },
+
+  cancelButton: {
+    flex: 1,
+    padding: theme.spacing.lg,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
     backgroundColor: theme.colors.neutral.gray[200],
+    color: theme.colors.neutral.gray[700],
     border: 'none',
-    fontSize: theme.typography.fontSize['2xl'],
+    borderRadius: theme.borderRadius.md,
     cursor: 'pointer',
-    opacity: 0.3,
     transition: `all ${theme.transitions.fast}`,
+  },
+
+  confirmButton: {
+    flex: 1,
+    padding: theme.spacing.lg,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+    backgroundColor: theme.colors.primary.main,
+    color: theme.colors.neutral.white,
+    border: 'none',
+    borderRadius: theme.borderRadius.md,
+    cursor: 'pointer',
     boxShadow: theme.shadows.md,
+    transition: `all ${theme.transitions.fast}`,
+  },
+
+  hint: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.neutral.gray[500],
+    textAlign: 'center',
+    margin: 0,
   },
 }
 
