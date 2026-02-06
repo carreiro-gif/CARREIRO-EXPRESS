@@ -250,6 +250,28 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
             <p style={styles.description}>
               Adicione imagens, títulos e organize a ordem arrastando os slides.
             </p>
+      case 'carrossel':
+        return (
+          <div style={styles.tabContent}>
+            <h2 style={styles.sectionTitle}>Gerenciar Carrossel</h2>
+            <p style={styles.description}>
+              Adicione imagens, títulos e organize a ordem arrastando os slides.
+            </p>
+
+            {/* Informação sobre tamanho ideal - MONITOR VERTICAL */}
+            <div style={styles.imageSizeInfo}>
+              <span style={styles.imageSizeIcon}>📐</span>
+              <div>
+                <p style={styles.imageSizeTitle}>Tamanho Recomendado para Monitor Vertical (em pé):</p>
+                <p style={styles.imageSizeValue}>✅ 1080 x 1920 pixels (proporção 9:16)</p>
+                <p style={styles.imageSizeHint}>
+                  💡 Use imagens nessa proporção para melhor visualização no totem em pé
+                </p>
+              </div>
+            </div>
+
+            {/* Lista de Slides */}
+            <div style={styles.carouselList}>
 
             {/* Lista de Slides */}
             <div style={styles.carouselList}>
@@ -1148,5 +1170,42 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
   },
 }
+  // Informação de tamanho de imagem
+  imageSizeInfo: {
+    display: 'flex',
+    gap: '1rem',
+    padding: '1.5rem',
+    backgroundColor: '#DBEAFE',
+    border: '2px solid #3B82F6',
+    borderRadius: '0.75rem',
+    marginBottom: '2rem',
+  },
+
+  imageSizeIcon: {
+    fontSize: '3rem',
+    lineHeight: 1,
+  },
+
+  imageSizeTitle: {
+    fontSize: '1rem',
+    fontWeight: 600,
+    color: '#1E40AF',
+    margin: 0,
+    marginBottom: '0.5rem',
+  },
+
+  imageSizeValue: {
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    color: '#1E3A8A',
+    margin: 0,
+    marginBottom: '0.5rem',
+  },
+
+  imageSizeHint: {
+    fontSize: '0.875rem',
+    color: '#1E40AF',
+    margin: 0,
+  },
 
 export default AdminScreen
