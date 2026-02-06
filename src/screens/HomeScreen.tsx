@@ -3,6 +3,7 @@
 import React from 'react'
 import { Carousel, CarouselSlide } from '../components/Carousel/Carousel'
 import { theme } from '../theme/theme'
+import { useConfig } from '../context/ConfigContext'
 
 interface HomeScreenProps {
   onStart: () => void
@@ -32,8 +33,17 @@ const mockSlides: CarouselSlide[] = [
 ]
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
+  // Pegar configurações personalizadas (logo, nome, cor, texto do botão)
+  const config = useConfig ? useConfig() : null
+  
+  const storeName = config?.storeName || 'CARREIRO LANCHES'
+  const logoUrl = config?.logoUrl || null
+  const buttonText = config?.buttonText || 'PEÇA AQUI'
+  const backgroundColor = config?.backgroundColor || theme.colors.background.default
+  const primaryColor = config?.primaryColor || theme.colors.primary.main
+
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, backgroundColor }}>
       {/* Carrossel principal */}
       <div style={styles.carouselSection}>
         <Carousel
@@ -48,16 +58,31 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
 
       {/* Conteúdo central */}
       <div style={styles.content}>
-        {/* Logo (opcional) */}
+        {/* Logo + Nome da loja */}
         <div style={styles.logoSection}>
-          <h1 style={styles.logo}>CARREIRO EXPRESS</h1>
+          {/* Logo (se configurada) */}
+          {logoUrl && (
+            <img
+              src={logoUrl}
+              alt={storeName}
+              style={styles.logoImage}
+            />
+          )}
+          
+          {/* Nome da loja */}
+          <h1 style={{ ...styles.storeName, color: primaryColor }}>
+            {storeName}
+          </h1>
           <p style={styles.tagline}>Hambúrgueres artesanais</p>
         </div>
 
-        {/* Botão principal */}
-        <button style={styles.startButton} onClick={onStart}>
+        {/* Botão principal - PEÇA AQUI */}
+        <button
+          style={{ ...styles.startButton, backgroundColor: primaryColor }}
+          onClick={onStart}
+        >
           <span style={styles.startButtonIcon}>🍔</span>
-          <span style={styles.startButtonText}>TOQUE PARA COMEÇAR SEU PEDIDO</span>
+          <span style={styles.startButtonText}>{buttonText}</span>
         </button>
 
         {/* Informações secundárias */}
@@ -77,15 +102,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
         </div>
       </div>
 
-      {/* Botão de configuração (escondido, ativado por toque longo) */}
+      {/* Botão de configuração (canto inferior direito, semi-oculto) */}
       {onOpenConfig && (
         <button
           style={styles.configButton}
           onClick={onOpenConfig}
-          onContextMenu={(e) => {
-            e.preventDefault()
-            onOpenConfig()
-          }}
+          title="Configurações (Admin)"
         >
           ⚙️
         </button>
@@ -98,7 +120,6 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     minHeight: '100vh',
-    backgroundColor: theme.colors.background.default,
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
@@ -123,14 +144,23 @@ const styles: Record<string, React.CSSProperties> = {
 
   logoSection: {
     textAlign: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: theme.spacing.md,
   },
 
-  logo: {
+  logoImage: {
+    maxWidth: '200px',
+    maxHeight: '200px',
+    objectFit: 'contain',
+    marginBottom: theme.spacing.md,
+  },
+
+  storeName: {
     fontSize: theme.typography.fontSize['5xl'],
     fontWeight: theme.typography.fontWeight.extrabold,
-    color: theme.colors.primary.main,
     margin: 0,
-    marginBottom: theme.spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
   },
@@ -150,7 +180,6 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     maxWidth: '600px',
     height: '160px',
-    backgroundColor: theme.colors.primary.main,
     border: 'none',
     borderRadius: theme.borderRadius.xl,
     cursor: 'pointer',
@@ -165,11 +194,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   startButtonText: {
-    fontSize: theme.typography.fontSize['2xl'],
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: theme.typography.fontSize['3xl'],
+    fontWeight: theme.typography.fontWeight.extrabold,
     color: theme.colors.neutral.white,
     textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+    letterSpacing: '0.1em',
   },
 
   infoSection: {
@@ -199,15 +228,16 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'fixed',
     bottom: theme.spacing.lg,
     right: theme.spacing.lg,
-    width: '48px',
-    height: '48px',
+    width: '56px',
+    height: '56px',
     borderRadius: theme.borderRadius.full,
     backgroundColor: theme.colors.neutral.gray[200],
     border: 'none',
-    fontSize: theme.typography.fontSize.xl,
+    fontSize: theme.typography.fontSize['2xl'],
     cursor: 'pointer',
     opacity: 0.3,
     transition: `all ${theme.transitions.fast}`,
+    boxShadow: theme.shadows.md,
   },
 }
 
