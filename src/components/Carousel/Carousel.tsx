@@ -1,14 +1,12 @@
-// src/components/Carousel/Carousel.tsx
+// src/components/Carousel/Carousel.tsx - VERSÃO CORRIGIDA
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { theme } from '../../theme/theme'
 
 export interface CarouselSlide {
   id: string
   imageUrl: string
   title?: string
   subtitle?: string
-  link?: string
 }
 
 interface CarouselProps {
@@ -16,8 +14,6 @@ interface CarouselProps {
   autoplay?: boolean
   autoplayDelay?: number
   showIndicators?: boolean
-  showArrows?: boolean
-  aspectRatio?: string
 }
 
 export const Carousel: React.FC<CarouselProps> = ({
@@ -25,35 +21,13 @@ export const Carousel: React.FC<CarouselProps> = ({
   autoplay = true,
   autoplayDelay = 5000,
   showIndicators = true,
-  showArrows = false,
-  aspectRatio = '16/9',
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isTransitioning, setIsTransitioning] = useState(false)
 
   // Avançar slide
   const nextSlide = useCallback(() => {
-    if (isTransitioning) return
-    setIsTransitioning(true)
     setCurrentIndex((prev) => (prev + 1) % slides.length)
-    setTimeout(() => setIsTransitioning(false), 500)
-  }, [isTransitioning, slides.length])
-
-  // Voltar slide
-  const prevSlide = useCallback(() => {
-    if (isTransitioning) return
-    setIsTransitioning(true)
-    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length)
-    setTimeout(() => setIsTransitioning(false), 500)
-  }, [isTransitioning, slides.length])
-
-  // Ir para slide específico
-  const goToSlide = (index: number) => {
-    if (isTransitioning || index === currentIndex) return
-    setIsTransitioning(true)
-    setCurrentIndex(index)
-    setTimeout(() => setIsTransitioning(false), 500)
-  }
+  }, [slides.length])
 
   // Autoplay
   useEffect(() => {
@@ -67,86 +41,51 @@ export const Carousel: React.FC<CarouselProps> = ({
     return null
   }
 
-  const currentSlide = slides[currentIndex]
-
   return (
     <div style={styles.container}>
-      {/* Wrapper do carrossel */}
-      <div style={{ ...styles.carouselWrapper, aspectRatio }}>
-        {/* Slides */}
-        {slides.map((slide, index) => (
-          <div
-            key={slide.id}
-            style={{
-              ...styles.slide,
-              opacity: index === currentIndex ? 1 : 0,
-              transform: `translateX(${(index - currentIndex) * 100}%)`,
-              transition: isTransitioning ? 'all 500ms ease-in-out' : 'none',
-            }}
-          >
-            {/* Imagem de fundo */}
-            <img
-              src={slide.imageUrl}
-              alt={slide.title || `Slide ${index + 1}`}
-              style={styles.image}
-            />
+      {/* Imagem atual - SEM CORTAR */}
+      <div style={styles.imageWrapper}>
+        <img
+          src={slides[currentIndex].imageUrl}
+          alt={slides[currentIndex].title || `Slide ${currentIndex + 1}`}
+          style={styles.image}
+        />
 
-            {/* Overlay gradiente (melhor legibilidade do texto) */}
-            {(slide.title || slide.subtitle) && (
-              <div style={styles.overlay} />
-            )}
-
-            {/* Conteúdo do slide */}
-            {(slide.title || slide.subtitle) && (
-              <div style={styles.content}>
-                {slide.title && <h2 style={styles.title}>{slide.title}</h2>}
-                {slide.subtitle && <p style={styles.subtitle}>{slide.subtitle}</p>}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Setas de navegação */}
-        {showArrows && slides.length > 1 && (
-          <>
-            <button
-              onClick={prevSlide}
-              style={{ ...styles.arrow, ...styles.arrowLeft }}
-              aria-label="Slide anterior"
-            >
-              ‹
-            </button>
-            <button
-              onClick={nextSlide}
-              style={{ ...styles.arrow, ...styles.arrowRight }}
-              aria-label="Próximo slide"
-            >
-              ›
-            </button>
-          </>
+        {/* Overlay gradiente */}
+        {(slides[currentIndex].title || slides[currentIndex].subtitle) && (
+          <div style={styles.overlay} />
         )}
 
-        {/* Indicadores */}
-        {showIndicators && slides.length > 1 && (
-          <div style={styles.indicators}>
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                style={{
-                  ...styles.indicator,
-                  backgroundColor:
-                    index === currentIndex
-                      ? theme.colors.primary.main
-                      : theme.colors.neutral.white,
-                  opacity: index === currentIndex ? 1 : 0.5,
-                }}
-                aria-label={`Ir para slide ${index + 1}`}
-              />
-            ))}
+        {/* Conteúdo */}
+        {(slides[currentIndex].title || slides[currentIndex].subtitle) && (
+          <div style={styles.content}>
+            {slides[currentIndex].title && (
+              <h2 style={styles.title}>{slides[currentIndex].title}</h2>
+            )}
+            {slides[currentIndex].subtitle && (
+              <p style={styles.subtitle}>{slides[currentIndex].subtitle}</p>
+            )}
           </div>
         )}
       </div>
+
+      {/* Indicadores */}
+      {showIndicators && slides.length > 1 && (
+        <div style={styles.indicators}>
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              style={{
+                ...styles.indicator,
+                backgroundColor: index === currentIndex ? '#E11D48' : '#FFFFFF',
+                opacity: index === currentIndex ? 1 : 0.5,
+              }}
+              aria-label={`Ir para slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -154,22 +93,14 @@ export const Carousel: React.FC<CarouselProps> = ({
 const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
+    height: '100%',
     position: 'relative',
     overflow: 'hidden',
+    backgroundColor: '#000000',
   },
 
-  carouselWrapper: {
+  imageWrapper: {
     position: 'relative',
-    width: '100%',
-    overflow: 'hidden',
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: theme.colors.neutral.gray[900],
-  },
-
-  slide: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
     width: '100%',
     height: '100%',
     display: 'flex',
@@ -180,9 +111,8 @@ const styles: Record<string, React.CSSProperties> = {
   image: {
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
+    objectFit: 'contain', // CONTAIN = NÃO CORTA, mostra imagem inteira
     userSelect: 'none',
-    pointerEvents: 'none',
   },
 
   overlay: {
@@ -190,83 +120,54 @@ const styles: Record<string, React.CSSProperties> = {
     bottom: 0,
     left: 0,
     right: 0,
-    height: '50%',
-    background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
+    height: '40%',
+    background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
     pointerEvents: 'none',
   },
 
   content: {
     position: 'absolute',
-    bottom: theme.spacing['2xl'],
-    left: theme.spacing['2xl'],
-    right: theme.spacing['2xl'],
-    color: theme.colors.neutral.white,
+    bottom: '2rem',
+    left: '2rem',
+    right: '2rem',
+    color: '#FFFFFF',
     zIndex: 10,
-    textAlign: 'left',
   },
 
   title: {
-    fontSize: theme.typography.fontSize['4xl'],
-    fontWeight: theme.typography.fontWeight.extrabold,
-    marginBottom: theme.spacing.md,
+    fontSize: '2.5rem',
+    fontWeight: 800,
+    marginBottom: '0.5rem',
     textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-    lineHeight: theme.typography.lineHeight.tight,
+    lineHeight: 1.2,
   },
 
   subtitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: '1.5rem',
+    fontWeight: 500,
     textShadow: '0 1px 4px rgba(0,0,0,0.5)',
     opacity: 0.95,
-    lineHeight: theme.typography.lineHeight.normal,
-  },
-
-  arrow: {
-    position: 'absolute',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    width: '56px',
-    height: '56px',
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    border: 'none',
-    fontSize: '32px',
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.neutral.gray[900],
-    cursor: 'pointer',
-    zIndex: 20,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: theme.shadows.lg,
-    transition: `all ${theme.transitions.fast}`,
-  },
-
-  arrowLeft: {
-    left: theme.spacing.lg,
-  },
-
-  arrowRight: {
-    right: theme.spacing.lg,
   },
 
   indicators: {
     position: 'absolute',
-    bottom: theme.spacing.lg,
+    bottom: '1rem',
     left: '50%',
     transform: 'translateX(-50%)',
     display: 'flex',
-    gap: theme.spacing.sm,
+    gap: '0.5rem',
     zIndex: 20,
   },
 
   indicator: {
     width: '12px',
     height: '12px',
-    borderRadius: theme.borderRadius.full,
+    borderRadius: '50%',
     border: 'none',
     cursor: 'pointer',
-    transition: `all ${theme.transitions.fast}`,
-    boxShadow: theme.shadows.md,
+    transition: 'all 150ms ease-in-out',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
   },
 }
+
+export default Carousel
