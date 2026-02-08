@@ -1,8 +1,7 @@
-// src/screens/HomeScreen.tsx - VERSÃO ATUALIZADA
+// src/screens/HomeScreen.tsx - VERSÃO FINAL
 
 import React, { useState, useRef } from 'react'
-import { Carousel, CarouselSlide } from '../components/Carousel/Carousel'
-import { theme } from '../theme/theme'
+import { Carousel } from '../components/Carousel/Carousel'
 import { useConfig } from '../context/ConfigContext'
 
 interface HomeScreenProps {
@@ -13,7 +12,6 @@ interface HomeScreenProps {
 const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
   const { config } = useConfig()
   
-  // Sistema de cliques secretos
   const [clickCount, setClickCount] = useState(0)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [password, setPassword] = useState('')
@@ -26,17 +24,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
     const newCount = clickCount + 1
     setClickCount(newCount)
 
-    if (clickTimeout.current) {
-      clearTimeout(clickTimeout.current)
-    }
+    if (clickTimeout.current) clearTimeout(clickTimeout.current)
 
     if (newCount >= CLICKS_NEEDED) {
       setShowPasswordModal(true)
       setClickCount(0)
     } else {
-      clickTimeout.current = setTimeout(() => {
-        setClickCount(0)
-      }, 2000)
+      clickTimeout.current = setTimeout(() => setClickCount(0), 2000)
     }
   }
 
@@ -46,38 +40,31 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
     if (password === ADMIN_PASSWORD) {
       setShowPasswordModal(false)
       setPassword('')
-      if (onOpenConfig) {
-        onOpenConfig()
-      }
+      onOpenConfig?.()
     } else {
       alert('❌ Senha incorreta!')
       setPassword('')
     }
   }
 
-  // Usar slides do config ou fallback
-  const slides: CarouselSlide[] = config.carouselSlides && config.carouselSlides.length > 0
+  const slides = config.carouselSlides?.length > 0
     ? config.carouselSlides
-    : [
-        {
-          id: 'default-1',
-          imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1080&h=1920&fit=crop',
-          title: 'Bem-vindo!',
-          subtitle: 'Configure o carrossel no painel admin',
-        }
-      ]
+    : [{
+        id: 'default',
+        imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1080&h=1920&fit=crop',
+        title: 'Bem-vindo!',
+        subtitle: 'Configure o carrossel no admin',
+      }]
 
   return (
     <div style={{ ...styles.container, backgroundColor: config.backgroundColor }}>
-      {/* Carrossel */}
+      {/* Carrossel - Altura fixa */}
       <div style={styles.carouselSection}>
         <Carousel
           slides={slides}
           autoplay={true}
           autoplayDelay={5000}
           showIndicators={true}
-          showArrows={false}
-          aspectRatio="9/16"
         />
       </div>
 
@@ -96,7 +83,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
             {config.storeName}
           </h1>
           <p style={{ ...styles.tagline, color: config.secondaryTextColor }}>
-            Hambúrgueres artesanais
+            {config.tagline}
           </p>
         </div>
 
@@ -128,7 +115,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
         </div>
       </div>
 
-      {/* Modal de Senha */}
+      {/* Modal Senha */}
       {showPasswordModal && (
         <div style={styles.modalOverlay} onClick={() => setShowPasswordModal(false)}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -172,7 +159,7 @@ const styles: Record<string, React.CSSProperties> = {
 
   carouselSection: {
     width: '100%',
-    maxHeight: '60vh',
+    height: '50vh', // 50% da altura da tela
     overflow: 'hidden',
   },
 
@@ -204,11 +191,13 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     margin: 0,
     textTransform: 'uppercase',
+    letterSpacing: '0.05em',
   },
 
   tagline: {
     fontSize: '1.25rem',
     margin: 0,
+    marginTop: '0.5rem',
   },
 
   startButton: {
@@ -223,6 +212,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '1rem',
     cursor: 'pointer',
     boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+    transition: 'all 150ms ease-in-out',
   },
 
   startButtonIcon: {
@@ -233,11 +223,14 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '2rem',
     fontWeight: 800,
     textTransform: 'uppercase',
+    letterSpacing: '0.1em',
   },
 
   infoSection: {
     display: 'flex',
     gap: '2rem',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
 
   infoItem: {
@@ -303,6 +296,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1rem',
     fontWeight: 600,
     backgroundColor: '#F3F4F6',
+    color: '#374151',
     border: 'none',
     borderRadius: '0.5rem',
     cursor: 'pointer',
