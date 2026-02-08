@@ -1,8 +1,9 @@
-// src/screens/AdminScreen.tsx
+// src/screens/AdminScreen.tsx - VERSÃO CORRIGIDA
 
 import React, { useState, useRef } from 'react'
 import { theme } from '../theme/theme'
 import { useConfig } from '../context/ConfigContext'
+import { useOrder } from '../context/OrderContext'
 
 interface AdminScreenProps {
   onClose: () => void
@@ -15,23 +16,9 @@ type AdminTab =
   | 'formas-pagamento'
   | 'estatisticas'
 
-interface CarouselImage {
-  id: string
-  file: File | null
-  url: string
-  title: string
-  subtitle: string
-}
-
-interface PaymentMethod {
-  id: string
-  name: string
-  icon: string
-  enabled: boolean
-}
-
 const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
   const { config, updateConfig } = useConfig()
+  const { stats } = useOrder()
   const [activeTab, setActiveTab] = useState<AdminTab>('geral')
 
   // Estados para Geral
@@ -42,38 +29,25 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   // Estados para Carrossel
-  const [carouselImages, setCarouselImages] = useState<CarouselImage[]>([
-    { id: '1', file: null, url: '', title: '', subtitle: '' }
-  ])
+  const [carouselImages, setCarouselImages] = useState(
+    config.carouselSlides && config.carouselSlides.length > 0
+      ? config.carouselSlides.map((slide, index) => ({
+          id: slide.id || `slide-${index}`,
+          file: null,
+          url: slide.imageUrl,
+          title: slide.title || '',
+          subtitle: slide.subtitle || '',
+        }))
+      : [{ id: '1', file: null, url: '', title: '', subtitle: '' }]
+  )
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
   // Estados para Aparência
   const [backgroundColor, setBackgroundColor] = useState(config.backgroundColor)
   const [primaryColor, setPrimaryColor] = useState(config.primaryColor)
-  const [textColor, setTextColor] = useState('#111827')
-  const [secondaryTextColor, setSecondaryTextColor] = useState('#6B7280')
-
-  // Estados para Formas de Pagamento
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
-    { id: 'debit', name: 'Débito', icon: '💳', enabled: true },
-    { id: 'credit', name: 'Crédito', icon: '💳', enabled: true },
-    { id: 'pix', name: 'PIX', icon: '📱', enabled: true },
-    { id: 'cash', name: 'Dinheiro', icon: '💵', enabled: true },
-    { id: 'meal-voucher', name: 'Vale Alimentação', icon: '🍱', enabled: true },
-    { id: 'food-voucher', name: 'Vale Refeição', icon: '🍽️', enabled: true },
-  ])
-
-  // Estados para Estatísticas (mockados por enquanto)
-  const [stats] = useState({
-    pedidosHoje: 42,
-    pedidosSemana: 285,
-    pedidosMes: 1240,
-    totalHoje: 1580.50,
-    totalSemana: 10890.00,
-    totalMes: 48720.00,
-    produtoMaisVendido: 'X-Bacon',
-    ticketMedio: 37.50,
-  })
+  const [textColor, setTextColor] = useState(config.textColor || '#111827')
+  const [secondaryTextColor, setSecondaryTextColor] = useState(config.secondaryTextColor || '#6B7280')
+  const [buttonTextColor, setButtonTextColor] = useState(config.buttonTextColor || '#FFFFFF')
 
   // ========== FUNÇÕES DE UPLOAD ==========
 
@@ -114,10 +88,12 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
   }
 
   const removeCarouselSlide = (index: number) => {
-    setCarouselImages(carouselImages.filter((_, i) => i !== index))
+    if (carouselImages.length > 1) {
+      setCarouselImages(carouselImages.filter((_, i) => i !== index))
+    }
   }
 
-  // ========== DRAG & DROP DO CARROSSEL ==========
+  // ========== DRAG & DROP ==========
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index)
@@ -141,15 +117,42 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
 
   // ========== SALVAR CONFIGURAÇÕES ==========
 
-  const handleSave = () => {
+  const handleSaveGeral = () => {
     updateConfig({
       storeName,
       buttonText,
-      backgroundColor,
-      primaryColor,
       logoUrl: logoPreview || null,
     })
-    alert('✅ Configurações salvas com sucesso!')
+    alert('✅ Configurações gerais salvas!')
+  }
+
+  const handleSaveCarousel = () => {
+    // Salvar carrossel no config
+    const slidesToSave = carouselImages
+      .filter(img => img.url) // Só salvar slides com imagem
+      .map(img => ({
+        id: img.id,
+        imageUrl: img.url,
+        title: img.title,
+        subtitle: img.subtitle,
+      }))
+
+    updateConfig({
+      carouselSlides: slidesToSave,
+    })
+    
+    alert(`✅ Carrossel salvo! ${slidesToSave.length} slides salvos.`)
+  }
+
+  const handleSaveAppearance = () => {
+    updateConfig({
+      backgroundColor,
+      primaryColor,
+      textColor,
+      secondaryTextColor,
+      buttonTextColor,
+    })
+    alert('✅ Cores salvas!')
   }
 
   // ========== TABS ==========
@@ -171,7 +174,6 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
           <div style={styles.tabContent}>
             <h2 style={styles.sectionTitle}>Configurações Gerais</h2>
 
-            {/* Nome da Loja */}
             <div style={styles.field}>
               <label style={styles.label}>Nome da Loja</label>
               <input
@@ -179,11 +181,9 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                 value={storeName}
                 onChange={(e) => setStoreName(e.target.value)}
                 style={styles.input}
-                placeholder="Ex: CARREIRO LANCHES"
               />
             </div>
 
-            {/* Texto do Botão */}
             <div style={styles.field}>
               <label style={styles.label}>Texto do Botão Principal</label>
               <input
@@ -191,42 +191,29 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                 value={buttonText}
                 onChange={(e) => setButtonText(e.target.value)}
                 style={styles.input}
-                placeholder="Ex: PEÇA AQUI"
               />
             </div>
 
-            {/* Upload de Logo */}
             <div style={styles.field}>
-              <label style={styles.label}>Logo da Loja</label>
-              <div style={styles.uploadArea}>
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg"
-                  onChange={handleLogoUpload}
-                  style={styles.fileInput}
-                />
-                <button
-                  type="button"
-                  style={styles.uploadButton}
-                  onClick={() => logoInputRef.current?.click()}
-                >
-                  📁 Escolher Imagem (JPG ou PNG)
-                </button>
-                <p style={styles.hint}>
-                  Tamanho recomendado: 200x200px
-                </p>
-              </div>
+              <label style={styles.label}>Logo da Loja (JPG ou PNG)</label>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                onChange={handleLogoUpload}
+                style={styles.fileInput}
+              />
+              <button
+                type="button"
+                style={styles.uploadButton}
+                onClick={() => logoInputRef.current?.click()}
+              >
+                📁 Escolher Imagem
+              </button>
               
-              {/* Preview da Logo */}
               {logoPreview && (
                 <div style={styles.imagePreviewBox}>
-                  <p style={styles.previewLabel}>Preview:</p>
-                  <img 
-                    src={logoPreview} 
-                    alt="Logo preview" 
-                    style={styles.logoPreviewImage}
-                  />
+                  <img src={logoPreview} alt="Logo" style={styles.logoPreviewImage} />
                   <button
                     type="button"
                     style={styles.removeImageButton}
@@ -240,6 +227,10 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                 </div>
               )}
             </div>
+
+            <button style={styles.saveButton} onClick={handleSaveGeral}>
+              💾 Salvar Configurações Gerais
+            </button>
           </div>
         )
 
@@ -247,19 +238,13 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
         return (
           <div style={styles.tabContent}>
             <h2 style={styles.sectionTitle}>Gerenciar Carrossel</h2>
-            <p style={styles.description}>
-              Adicione imagens, títulos e organize a ordem arrastando os slides.
-            </p>
 
-            {/* Informação sobre tamanho ideal - MONITOR VERTICAL */}
+            {/* Alerta de Tamanho */}
             <div style={styles.imageSizeInfo}>
               <span style={styles.imageSizeIcon}>📐</span>
               <div>
-                <p style={styles.imageSizeTitle}>Tamanho Recomendado para Monitor Vertical (em pé):</p>
-                <p style={styles.imageSizeValue}>✅ 1080 x 1920 pixels (proporção 9:16)</p>
-                <p style={styles.imageSizeHint}>
-                  💡 Use imagens nessa proporção para melhor visualização no totem em pé
-                </p>
+                <p style={styles.imageSizeTitle}>Tamanho para Monitor Vertical (em pé):</p>
+                <p style={styles.imageSizeValue}>✅ 1080 x 1920 pixels (9:16)</p>
               </div>
             </div>
 
@@ -277,10 +262,8 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                     opacity: draggedIndex === index ? 0.5 : 1,
                   }}
                 >
-                  {/* Número do Slide */}
                   <div style={styles.slideNumber}>#{index + 1}</div>
 
-                  {/* Upload de Imagem */}
                   <div style={styles.slideImageArea}>
                     <input
                       type="file"
@@ -293,12 +276,11 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                       <img src={slide.url} alt={`Slide ${index + 1}`} style={styles.slidePreview} />
                     ) : (
                       <label htmlFor={`carousel-${index}`} style={styles.uploadPlaceholder}>
-                        📷 Clique para adicionar imagem (9:16)
+                        📷 Clique para adicionar (1080x1920)
                       </label>
                     )}
                   </div>
 
-                  {/* Título e Subtítulo */}
                   <div style={styles.slideFields}>
                     <input
                       type="text"
@@ -324,7 +306,6 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                     />
                   </div>
 
-                  {/* Botão Remover */}
                   {carouselImages.length > 1 && (
                     <button
                       type="button"
@@ -335,18 +316,17 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                     </button>
                   )}
 
-                  {/* Ícone Drag */}
                   <div style={styles.dragHandle}>⋮⋮</div>
                 </div>
               ))}
             </div>
 
-            <button
-              type="button"
-              style={styles.addSlideButton}
-              onClick={addCarouselSlide}
-            >
-              ➕ Adicionar Novo Slide
+            <button style={styles.addSlideButton} onClick={addCarouselSlide}>
+              ➕ Adicionar Slide
+            </button>
+
+            <button style={styles.saveButton} onClick={handleSaveCarousel}>
+              💾 Salvar Carrossel
             </button>
           </div>
         )
@@ -376,7 +356,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
               <div style={{ ...styles.colorPreview, backgroundColor }} />
             </div>
 
-            {/* Cor Primária (Botões) */}
+            {/* Cor Primária */}
             <div style={styles.field}>
               <label style={styles.label}>Cor Primária (Botões)</label>
               <div style={styles.colorPickerWrapper}>
@@ -394,6 +374,26 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                 />
               </div>
               <div style={{ ...styles.colorPreview, backgroundColor: primaryColor }} />
+            </div>
+
+            {/* COR DO TEXTO DO BOTÃO - NOVO! */}
+            <div style={styles.field}>
+              <label style={styles.label}>Cor do Texto do Botão ⭐ NOVO!</label>
+              <div style={styles.colorPickerWrapper}>
+                <input
+                  type="color"
+                  value={buttonTextColor}
+                  onChange={(e) => setButtonTextColor(e.target.value)}
+                  style={styles.colorPicker}
+                />
+                <input
+                  type="text"
+                  value={buttonTextColor}
+                  onChange={(e) => setButtonTextColor(e.target.value)}
+                  style={styles.colorInput}
+                />
+              </div>
+              <div style={{ ...styles.colorPreview, backgroundColor: buttonTextColor }} />
             </div>
 
             {/* Cor do Texto Principal */}
@@ -444,12 +444,20 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                   <img src={logoPreview} alt="Logo" style={styles.mockLogoImage} />
                 )}
                 <h1 style={{ ...styles.mockStoreName, color: textColor }}>{storeName}</h1>
-                <p style={{ ...styles.mockTagline, color: secondaryTextColor}}>Hambúrgueres artesanais</p>
-                <button style={{ ...styles.mockButton, backgroundColor: primaryColor }}>
+                <p style={{ ...styles.mockTagline, color: secondaryTextColor }}>Hambúrgueres artesanais</p>
+                <button style={{ 
+                  ...styles.mockButton, 
+                  backgroundColor: primaryColor,
+                  color: buttonTextColor,
+                }}>
                   {buttonText}
                 </button>
               </div>
             </div>
+
+            <button style={styles.saveButton} onClick={handleSaveAppearance}>
+              💾 Salvar Aparência
+            </button>
           </div>
         )
 
@@ -457,37 +465,8 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
         return (
           <div style={styles.tabContent}>
             <h2 style={styles.sectionTitle}>Formas de Pagamento</h2>
-            <p style={styles.description}>
-              Ative ou desative as formas de pagamento disponíveis no totem.
-            </p>
-
-            <div style={styles.paymentList}>
-              {paymentMethods.map((method) => (
-                <div key={method.id} style={styles.paymentItem}>
-                  <div style={styles.paymentInfo}>
-                    <span style={styles.paymentIcon}>{method.icon}</span>
-                    <span style={styles.paymentName}>{method.name}</span>
-                  </div>
-                  <label style={styles.switch}>
-                    <input
-                      type="checkbox"
-                      checked={method.enabled}
-                      onChange={() => {
-                        setPaymentMethods(
-                          paymentMethods.map((m) =>
-                            m.id === method.id ? { ...m, enabled: !m.enabled } : m
-                          )
-                        )
-                      }}
-                      style={styles.switchInput}
-                    />
-                    <span style={{
-                      ...styles.slider,
-                      backgroundColor: method.enabled ? '#10B981' : '#D1D5DB',
-                    }} />
-                  </label>
-                </div>
-              ))}
+            <div style={styles.comingSoon}>
+              <p>🚧 Em desenvolvimento</p>
             </div>
           </div>
         )
@@ -495,9 +474,8 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
       case 'estatisticas':
         return (
           <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Estatísticas e Relatórios</h2>
+            <h2 style={styles.sectionTitle}>Estatísticas em Tempo Real</h2>
 
-            {/* Cards de Estatísticas */}
             <div style={styles.statsGrid}>
               <div style={styles.statCard}>
                 <div style={styles.statIcon}>📊</div>
@@ -518,7 +496,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
               <div style={styles.statCard}>
                 <div style={styles.statIcon}>📅</div>
                 <div style={styles.statInfo}>
-                  <p style={styles.statLabel}>Pedidos Esta Semana</p>
+                  <p style={styles.statLabel}>Pedidos Semana</p>
                   <p style={styles.statValue}>{stats.pedidosSemana}</p>
                 </div>
               </div>
@@ -534,7 +512,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
               <div style={styles.statCard}>
                 <div style={styles.statIcon}>📆</div>
                 <div style={styles.statInfo}>
-                  <p style={styles.statLabel}>Pedidos Este Mês</p>
+                  <p style={styles.statLabel}>Pedidos Mês</p>
                   <p style={styles.statValue}>{stats.pedidosMes}</p>
                 </div>
               </div>
@@ -563,17 +541,6 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                 </div>
               </div>
             </div>
-
-            {/* Histórico de Pedidos */}
-            <div style={styles.historySection}>
-              <h3 style={styles.historyTitle}>Últimos Pedidos</h3>
-              <div style={styles.comingSoon}>
-                <span style={styles.comingSoonIcon}>🚧</span>
-                <p style={styles.comingSoonText}>
-                  Histórico detalhado de pedidos em desenvolvimento
-                </p>
-              </div>
-            </div>
           </div>
         )
 
@@ -584,20 +551,16 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
 
   return (
     <div style={styles.container}>
-      {/* Header */}
       <div style={styles.header}>
         <div>
           <h1 style={styles.headerTitle}>⚙️ Painel Administrativo</h1>
-          <p style={styles.headerSubtitle}>Configure seu sistema</p>
         </div>
         <button style={styles.closeButton} onClick={onClose}>
           ✕ Fechar
         </button>
       </div>
 
-      {/* Layout */}
       <div style={styles.mainLayout}>
-        {/* Sidebar */}
         <div style={styles.sidebar}>
           {tabs.map((tab) => (
             <button
@@ -615,32 +578,15 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
           ))}
         </div>
 
-        {/* Conteúdo */}
         <div style={styles.content}>
           {renderContent()}
-
-          {/* Botões de Ação */}
-          {(activeTab === 'geral' || activeTab === 'aparencia' || activeTab === 'formas-pagamento') && (
-            <div style={styles.actions}>
-              <button style={styles.saveButton} onClick={handleSave}>
-                💾 Salvar Alterações
-              </button>
-            </div>
-          )}
-
-          {activeTab === 'carrossel' && (
-            <div style={styles.actions}>
-              <button style={styles.saveButton} onClick={() => alert('✅ Carrossel salvo!')}>
-                💾 Salvar Carrossel
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
   )
 }
 
+// CONTINUA NO PRÓXIMO ARQUIVO COM OS ESTILOS...
 const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
@@ -657,19 +603,11 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '2rem',
     backgroundColor: '#FFFFFF',
     borderBottom: '1px solid #E5E7EB',
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
   },
 
   headerTitle: {
     fontSize: '1.875rem',
     fontWeight: 700,
-    margin: 0,
-    color: '#111827',
-  },
-
-  headerSubtitle: {
-    fontSize: '1rem',
-    color: '#6B7280',
     margin: 0,
   },
 
@@ -678,7 +616,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1.125rem',
     fontWeight: 600,
     backgroundColor: '#F3F4F6',
-    color: '#374151',
     border: 'none',
     borderRadius: '0.5rem',
     cursor: 'pointer',
@@ -687,7 +624,6 @@ const styles: Record<string, React.CSSProperties> = {
   mainLayout: {
     display: 'flex',
     flex: 1,
-    overflow: 'hidden',
   },
 
   sidebar: {
@@ -698,7 +634,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
-    overflowY: 'auto',
   },
 
   tabButton: {
@@ -712,7 +647,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '0.5rem',
     cursor: 'pointer',
     textAlign: 'left',
-    transition: 'all 150ms ease-in-out',
   },
 
   tabIcon: {
@@ -733,13 +667,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1.5rem',
     fontWeight: 700,
     marginBottom: '1.5rem',
-    color: '#111827',
-  },
-
-  description: {
-    fontSize: '1rem',
-    color: '#6B7280',
-    marginBottom: '2rem',
   },
 
   field: {
@@ -750,7 +677,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'block',
     fontSize: '1rem',
     fontWeight: 600,
-    color: '#374151',
     marginBottom: '0.5rem',
   },
 
@@ -760,17 +686,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1rem',
     border: '2px solid #D1D5DB',
     borderRadius: '0.5rem',
-  },
-
-  hint: {
-    fontSize: '0.875rem',
-    color: '#6B7280',
-    marginTop: '0.5rem',
-  },
-
-  // Upload de arquivos
-  uploadArea: {
-    marginBottom: '1rem',
   },
 
   fileInput: {
@@ -786,7 +701,6 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
     borderRadius: '0.5rem',
     cursor: 'pointer',
-    marginBottom: '0.5rem',
   },
 
   imagePreviewBox: {
@@ -800,18 +714,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '1rem',
   },
 
-  previewLabel: {
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    color: '#6B7280',
-  },
-
   logoPreviewImage: {
     maxWidth: '200px',
     maxHeight: '200px',
     objectFit: 'contain',
-    border: '2px solid #E5E7EB',
-    borderRadius: '0.5rem',
   },
 
   removeImageButton: {
@@ -825,7 +731,6 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
 
-  // Informação de tamanho de imagem
   imageSizeInfo: {
     display: 'flex',
     gap: '1rem',
@@ -838,7 +743,6 @@ const styles: Record<string, React.CSSProperties> = {
 
   imageSizeIcon: {
     fontSize: '3rem',
-    lineHeight: 1,
   },
 
   imageSizeTitle: {
@@ -846,7 +750,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     color: '#1E40AF',
     margin: 0,
-    marginBottom: '0.5rem',
   },
 
   imageSizeValue: {
@@ -854,16 +757,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     color: '#1E3A8A',
     margin: 0,
-    marginBottom: '0.5rem',
   },
 
-  imageSizeHint: {
-    fontSize: '0.875rem',
-    color: '#1E40AF',
-    margin: 0,
-  },
-
-  // Carrossel
   carouselList: {
     display: 'flex',
     flexDirection: 'column',
@@ -878,7 +773,6 @@ const styles: Record<string, React.CSSProperties> = {
     border: '2px solid #E5E7EB',
     borderRadius: '0.75rem',
     cursor: 'move',
-    transition: 'all 150ms ease-in-out',
   },
 
   slideNumber: {
@@ -903,7 +797,6 @@ const styles: Record<string, React.CSSProperties> = {
     right: '1rem',
     fontSize: '1.5rem',
     color: '#9CA3AF',
-    cursor: 'move',
   },
 
   slideImageArea: {
@@ -963,9 +856,9 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '0.5rem',
     cursor: 'pointer',
     width: '100%',
+    marginBottom: '1rem',
   },
 
-  // Cores
   colorPickerWrapper: {
     display: 'flex',
     gap: '0.75rem',
@@ -996,7 +889,6 @@ const styles: Record<string, React.CSSProperties> = {
     border: '2px solid #D1D5DB',
   },
 
-  // Preview
   previewSection: {
     marginTop: '2rem',
     padding: '1.5rem',
@@ -1042,75 +934,14 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '1rem 2rem',
     fontSize: '1.25rem',
     fontWeight: 700,
-    color: '#FFFFFF',
     border: 'none',
     borderRadius: '0.75rem',
   },
 
-  // Formas de Pagamento
-  paymentList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-
-  paymentItem: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '1.5rem',
-    backgroundColor: '#FFFFFF',
-    border: '2px solid #E5E7EB',
-    borderRadius: '0.75rem',
-  },
-
-  paymentInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-  },
-
-  paymentIcon: {
-    fontSize: '2rem',
-  },
-
-  paymentName: {
-    fontSize: '1.125rem',
-    fontWeight: 600,
-    color: '#111827',
-  },
-
-  // Switch Toggle
-  switch: {
-    position: 'relative',
-    display: 'inline-block',
-    width: '60px',
-    height: '34px',
-  },
-
-  switchInput: {
-    opacity: 0,
-    width: 0,
-    height: 0,
-  },
-
-  slider: {
-    position: 'absolute',
-    cursor: 'pointer',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: '34px',
-    transition: 'all 300ms ease-in-out',
-  },
-
-  // Estatísticas
   statsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
     gap: '1.5rem',
-    marginBottom: '2rem',
   },
 
   statCard: {
@@ -1121,7 +952,6 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: '#FFFFFF',
     border: '2px solid #E5E7EB',
     borderRadius: '0.75rem',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
   },
 
   statIcon: {
@@ -1143,18 +973,7 @@ const styles: Record<string, React.CSSProperties> = {
   statValue: {
     fontSize: '1.5rem',
     fontWeight: 700,
-    color: '#111827',
     margin: 0,
-  },
-
-  historySection: {
-    marginTop: '2rem',
-  },
-
-  historyTitle: {
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    marginBottom: '1rem',
   },
 
   comingSoon: {
@@ -1162,24 +981,6 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
     backgroundColor: '#F3F4F6',
     borderRadius: '0.75rem',
-  },
-
-  comingSoonIcon: {
-    fontSize: '48px',
-    display: 'block',
-    marginBottom: '1rem',
-  },
-
-  comingSoonText: {
-    fontSize: '1rem',
-    color: '#6B7280',
-  },
-
-  // Ações
-  actions: {
-    marginTop: '2rem',
-    paddingTop: '1.5rem',
-    borderTop: '1px solid #E5E7EB',
   },
 
   saveButton: {
@@ -1191,7 +992,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
     borderRadius: '0.5rem',
     cursor: 'pointer',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    marginTop: '1rem',
   },
 }
 
