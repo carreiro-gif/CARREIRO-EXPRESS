@@ -1,4 +1,4 @@
-// src/context/ConfigContext.tsx
+// src/context/ConfigContext.tsx - VERSÃO COMPLETA
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
@@ -11,15 +11,16 @@ export interface CarouselSlide {
 
 export interface StoreConfig {
   storeName: string
+  tagline: string // NOVO! Editável
   logoUrl: string | null
   buttonText: string
-  buttonTextColor: string // NOVO!
+  buttonTextColor: string
   backgroundColor: string
   primaryColor: string
-  textColor: string // NOVO!
-  secondaryTextColor: string // NOVO!
+  textColor: string
+  secondaryTextColor: string
   carouselSlides: CarouselSlide[]
-  enabledPaymentMethods: string[] // NOVO!
+  enabledPaymentMethods: string[]
 }
 
 interface ConfigContextType {
@@ -30,9 +31,10 @@ interface ConfigContextType {
 
 const defaultConfig: StoreConfig = {
   storeName: 'CARREIRO LANCHES',
+  tagline: 'Hambúrgueres artesanais', // Editável
   logoUrl: null,
   buttonText: 'PEÇA AQUI',
-  buttonTextColor: '#FFFFFF', // Branco por padrão
+  buttonTextColor: '#FFFFFF',
   backgroundColor: '#F9FAFB',
   primaryColor: '#E11D48',
   textColor: '#111827',
@@ -47,32 +49,34 @@ const ConfigContext = createContext<ConfigContextType | undefined>(undefined)
 
 export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [config, setConfig] = useState<StoreConfig>(defaultConfig)
+  const [loaded, setLoaded] = useState(false)
 
-  // Carregar configuração do localStorage ao iniciar
+  // Carregar do localStorage
   useEffect(() => {
     try {
-      const savedConfig = localStorage.getItem(STORAGE_KEY)
-      if (savedConfig) {
-        const parsed = JSON.parse(savedConfig)
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
         setConfig({ ...defaultConfig, ...parsed })
-        console.log('✅ Configurações carregadas do localStorage')
+        console.log('✅ Config carregado:', parsed)
       }
     } catch (error) {
-      console.error('❌ Erro ao carregar configurações:', error)
+      console.error('❌ Erro ao carregar config:', error)
+    } finally {
+      setLoaded(true)
     }
   }, [])
 
-  // Salvar no localStorage sempre que config mudar
+  // Salvar no localStorage
   const updateConfig = (newConfig: Partial<StoreConfig>) => {
     setConfig((prev) => {
       const updated = { ...prev, ...newConfig }
       
-      // Salvar no localStorage
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-        console.log('✅ Configurações salvas no localStorage:', updated)
+        console.log('✅ Config salvo:', updated)
       } catch (error) {
-        console.error('❌ Erro ao salvar configurações:', error)
+        console.error('❌ Erro ao salvar config:', error)
       }
       
       return updated
@@ -82,7 +86,11 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const resetConfig = () => {
     setConfig(defaultConfig)
     localStorage.removeItem(STORAGE_KEY)
-    console.log('🔄 Configurações resetadas')
+  }
+
+  // Não renderizar até carregar
+  if (!loaded) {
+    return <div>Carregando...</div>
   }
 
   return (
