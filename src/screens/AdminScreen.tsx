@@ -1,7 +1,6 @@
-// src/screens/AdminScreen.tsx - VERSÃO CORRIGIDA
+// src/screens/AdminScreen.tsx - VERSÃO SIMPLIFICADA E FUNCIONAL
 
 import React, { useState, useRef } from 'react'
-import { theme } from '../theme/theme'
 import { useConfig } from '../context/ConfigContext'
 import { useOrder } from '../context/OrderContext'
 
@@ -9,52 +8,48 @@ interface AdminScreenProps {
   onClose: () => void
 }
 
-type AdminTab = 
-  | 'geral' 
-  | 'carrossel' 
-  | 'aparencia' 
-  | 'formas-pagamento'
-  | 'estatisticas'
+type AdminTab = 'geral' | 'carrossel' | 'aparencia' | 'pagamentos' | 'estatisticas'
 
 const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
   const { config, updateConfig } = useConfig()
   const { stats } = useOrder()
   const [activeTab, setActiveTab] = useState<AdminTab>('geral')
 
-  // Estados para Geral
+  // Estados
   const [storeName, setStoreName] = useState(config.storeName)
+  const [tagline, setTagline] = useState(config.tagline)
   const [buttonText, setButtonText] = useState(config.buttonText)
-  const [logoFile, setLogoFile] = useState<File | null>(null)
-  const [logoPreview, setLogoPreview] = useState<string>(config.logoUrl || '')
+  const [logoPreview, setLogoPreview] = useState(config.logoUrl || '')
   const logoInputRef = useRef<HTMLInputElement>(null)
 
-  // Estados para Carrossel
-  const [carouselImages, setCarouselImages] = useState(
-    config.carouselSlides && config.carouselSlides.length > 0
-      ? config.carouselSlides.map((slide, index) => ({
-          id: slide.id || `slide-${index}`,
-          file: null,
-          url: slide.imageUrl,
-          title: slide.title || '',
-          subtitle: slide.subtitle || '',
-        }))
-      : [{ id: '1', file: null, url: '', title: '', subtitle: '' }]
-  )
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-
-  // Estados para Aparência
+  // Cores
   const [backgroundColor, setBackgroundColor] = useState(config.backgroundColor)
   const [primaryColor, setPrimaryColor] = useState(config.primaryColor)
-  const [textColor, setTextColor] = useState(config.textColor || '#111827')
-  const [secondaryTextColor, setSecondaryTextColor] = useState(config.secondaryTextColor || '#6B7280')
-  const [buttonTextColor, setButtonTextColor] = useState(config.buttonTextColor || '#FFFFFF')
+  const [buttonTextColor, setButtonTextColor] = useState(config.buttonTextColor)
+  const [textColor, setTextColor] = useState(config.textColor)
+  const [secondaryTextColor, setSecondaryTextColor] = useState(config.secondaryTextColor)
 
-  // ========== FUNÇÕES DE UPLOAD ==========
+  // Carrossel
+  const [carouselImages, setCarouselImages] = useState(
+    config.carouselSlides?.length > 0
+      ? config.carouselSlides.map((s, i) => ({ ...s, localId: i }))
+      : [{ localId: 0, id: '1', imageUrl: '', title: '', subtitle: '' }]
+  )
 
+  // Pagamentos
+  const [paymentMethods, setPaymentMethods] = useState([
+    { id: 'debit', name: 'Débito', icon: '💳', enabled: config.enabledPaymentMethods.includes('debit') },
+    { id: 'credit', name: 'Crédito', icon: '💳', enabled: config.enabledPaymentMethods.includes('credit') },
+    { id: 'pix', name: 'PIX', icon: '📱', enabled: config.enabledPaymentMethods.includes('pix') },
+    { id: 'cash', name: 'Dinheiro', icon: '💵', enabled: config.enabledPaymentMethods.includes('cash') },
+    { id: 'meal-voucher', name: 'Vale Alimentação', icon: '🍱', enabled: config.enabledPaymentMethods.includes('meal-voucher') },
+    { id: 'food-voucher', name: 'Vale Refeição', icon: '🍽️', enabled: config.enabledPaymentMethods.includes('food-voucher') },
+  ])
+
+  // Upload de Logo
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      setLogoFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
         setLogoPreview(reader.result as string)
@@ -63,483 +58,334 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
     }
   }
 
-  const handleCarouselImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  // Upload Carrossel
+  const handleCarouselUpload = (localId: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
       reader.onloadend = () => {
-        const newImages = [...carouselImages]
-        newImages[index] = {
-          ...newImages[index],
-          file,
-          url: reader.result as string,
-        }
-        setCarouselImages(newImages)
+        setCarouselImages(prev =>
+          prev.map(img =>
+            img.localId === localId
+              ? { ...img, imageUrl: reader.result as string }
+              : img
+          )
+        )
       }
       reader.readAsDataURL(file)
     }
   }
 
-  const addCarouselSlide = () => {
-    setCarouselImages([
-      ...carouselImages,
-      { id: Date.now().toString(), file: null, url: '', title: '', subtitle: '' }
-    ])
-  }
-
-  const removeCarouselSlide = (index: number) => {
-    if (carouselImages.length > 1) {
-      setCarouselImages(carouselImages.filter((_, i) => i !== index))
-    }
-  }
-
-  // ========== DRAG & DROP ==========
-
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index)
-  }
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault()
-    if (draggedIndex === null || draggedIndex === index) return
-
-    const newImages = [...carouselImages]
-    const draggedItem = newImages[draggedIndex]
-    newImages.splice(draggedIndex, 1)
-    newImages.splice(index, 0, draggedItem)
-    setCarouselImages(newImages)
-    setDraggedIndex(index)
-  }
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null)
-  }
-
-  // ========== SALVAR CONFIGURAÇÕES ==========
-
-  const handleSaveGeral = () => {
+  // SALVAR - GERAL
+  const saveGeral = () => {
     updateConfig({
       storeName,
+      tagline,
       buttonText,
       logoUrl: logoPreview || null,
     })
-    alert('✅ Configurações gerais salvas!')
+    alert('✅ Salvo!')
   }
 
-  const handleSaveCarousel = () => {
-    // Salvar carrossel no config
-    const slidesToSave = carouselImages
-      .filter(img => img.url) // Só salvar slides com imagem
+  // SALVAR - CARROSSEL
+  const saveCarrossel = () => {
+    const slides = carouselImages
+      .filter(img => img.imageUrl)
       .map(img => ({
         id: img.id,
-        imageUrl: img.url,
+        imageUrl: img.imageUrl,
         title: img.title,
         subtitle: img.subtitle,
       }))
 
-    updateConfig({
-      carouselSlides: slidesToSave,
-    })
-    
-    alert(`✅ Carrossel salvo! ${slidesToSave.length} slides salvos.`)
+    updateConfig({ carouselSlides: slides })
+    alert(`✅ ${slides.length} slides salvos!`)
   }
 
-  const handleSaveAppearance = () => {
+  // SALVAR - APARÊNCIA
+  const saveAppearance = () => {
     updateConfig({
       backgroundColor,
       primaryColor,
+      buttonTextColor,
       textColor,
       secondaryTextColor,
-      buttonTextColor,
     })
     alert('✅ Cores salvas!')
   }
 
-  // ========== TABS ==========
+  // SALVAR - PAGAMENTOS
+  const savePayments = () => {
+    const enabled = paymentMethods.filter(p => p.enabled).map(p => p.id)
+    updateConfig({ enabledPaymentMethods: enabled })
+    alert('✅ Formas de pagamento salvas!')
+  }
 
   const tabs = [
     { id: 'geral' as AdminTab, label: 'Geral', icon: '⚙️' },
     { id: 'carrossel' as AdminTab, label: 'Carrossel', icon: '🎬' },
     { id: 'aparencia' as AdminTab, label: 'Aparência', icon: '🎨' },
-    { id: 'formas-pagamento' as AdminTab, label: 'Pagamentos', icon: '💳' },
+    { id: 'pagamentos' as AdminTab, label: 'Pagamentos', icon: '💳' },
     { id: 'estatisticas' as AdminTab, label: 'Estatísticas', icon: '📊' },
   ]
-
-  // ========== RENDERIZAR CONTEÚDO ==========
 
   const renderContent = () => {
     switch (activeTab) {
       case 'geral':
         return (
-          <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Configurações Gerais</h2>
+          <div style={styles.tab}>
+            <h2 style={styles.title}>Configurações Gerais</h2>
 
-            <div style={styles.field}>
-              <label style={styles.label}>Nome da Loja</label>
-              <input
-                type="text"
-                value={storeName}
-                onChange={(e) => setStoreName(e.target.value)}
-                style={styles.input}
-              />
-            </div>
+            <label style={styles.label}>Nome da Loja</label>
+            <input
+              type="text"
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+              style={styles.input}
+            />
 
-            <div style={styles.field}>
-              <label style={styles.label}>Texto do Botão Principal</label>
-              <input
-                type="text"
-                value={buttonText}
-                onChange={(e) => setButtonText(e.target.value)}
-                style={styles.input}
-              />
-            </div>
+            <label style={styles.label}>Slogan/Tagline (ex: Hambúrgueres artesanais)</label>
+            <input
+              type="text"
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              style={styles.input}
+              placeholder="Hambúrgueres artesanais"
+            />
 
-            <div style={styles.field}>
-              <label style={styles.label}>Logo da Loja (JPG ou PNG)</label>
-              <input
-                ref={logoInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/jpg"
-                onChange={handleLogoUpload}
-                style={styles.fileInput}
-              />
-              <button
-                type="button"
-                style={styles.uploadButton}
-                onClick={() => logoInputRef.current?.click()}
-              >
-                📁 Escolher Imagem
-              </button>
-              
-              {logoPreview && (
-                <div style={styles.imagePreviewBox}>
-                  <img src={logoPreview} alt="Logo" style={styles.logoPreviewImage} />
-                  <button
-                    type="button"
-                    style={styles.removeImageButton}
-                    onClick={() => {
-                      setLogoFile(null)
-                      setLogoPreview('')
-                    }}
-                  >
-                    🗑️ Remover Logo
-                  </button>
-                </div>
-              )}
-            </div>
+            <label style={styles.label}>Texto do Botão</label>
+            <input
+              type="text"
+              value={buttonText}
+              onChange={(e) => setButtonText(e.target.value)}
+              style={styles.input}
+            />
 
-            <button style={styles.saveButton} onClick={handleSaveGeral}>
-              💾 Salvar Configurações Gerais
+            <label style={styles.label}>Logo (JPG/PNG)</label>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              style={styles.fileInput}
+            />
+            <button
+              style={styles.uploadBtn}
+              onClick={() => logoInputRef.current?.click()}
+            >
+              📁 Escolher Logo
+            </button>
+
+            {logoPreview && (
+              <img src={logoPreview} alt="Logo" style={styles.preview} />
+            )}
+
+            <button style={styles.saveBtn} onClick={saveGeral}>
+              💾 SALVAR GERAL
             </button>
           </div>
         )
 
       case 'carrossel':
         return (
-          <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Gerenciar Carrossel</h2>
-
-            {/* Alerta de Tamanho */}
-            <div style={styles.imageSizeInfo}>
-              <span style={styles.imageSizeIcon}>📐</span>
-              <div>
-                <p style={styles.imageSizeTitle}>Tamanho para Monitor Vertical (em pé):</p>
-                <p style={styles.imageSizeValue}>✅ 1080 x 1920 pixels (9:16)</p>
-              </div>
+          <div style={styles.tab}>
+            <h2 style={styles.title}>Carrossel</h2>
+            
+            <div style={styles.alert}>
+              <p style={styles.alertText}>
+                📐 Tamanho: <strong>Qualquer tamanho vertical</strong> (ex: 1080x1920)
+                <br />
+                ✅ A imagem será exibida INTEIRA, sem cortes
+              </p>
             </div>
 
-            {/* Lista de Slides */}
-            <div style={styles.carouselList}>
-              {carouselImages.map((slide, index) => (
-                <div
-                  key={slide.id}
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragEnd={handleDragEnd}
-                  style={{
-                    ...styles.carouselItem,
-                    opacity: draggedIndex === index ? 0.5 : 1,
-                  }}
+            {carouselImages.map((img, i) => (
+              <div key={img.localId} style={styles.slideBox}>
+                <h3>Slide #{i + 1}</h3>
+                
+                <input
+                  type="file"
+                  accept="image/*"
+                  id={`slide-${i}`}
+                  onChange={(e) => handleCarouselUpload(img.localId, e)}
+                  style={styles.fileInput}
+                />
+                <button
+                  style={styles.uploadBtn}
+                  onClick={() => document.getElementById(`slide-${i}`)?.click()}
                 >
-                  <div style={styles.slideNumber}>#{index + 1}</div>
+                  📷 Escolher Imagem
+                </button>
 
-                  <div style={styles.slideImageArea}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      id={`carousel-${index}`}
-                      onChange={(e) => handleCarouselImageUpload(index, e)}
-                      style={styles.fileInput}
-                    />
-                    {slide.url ? (
-                      <img src={slide.url} alt={`Slide ${index + 1}`} style={styles.slidePreview} />
-                    ) : (
-                      <label htmlFor={`carousel-${index}`} style={styles.uploadPlaceholder}>
-                        📷 Clique para adicionar (1080x1920)
-                      </label>
-                    )}
-                  </div>
+                {img.imageUrl && (
+                  <img src={img.imageUrl} alt={`Slide ${i + 1}`} style={styles.slidePreview} />
+                )}
 
-                  <div style={styles.slideFields}>
-                    <input
-                      type="text"
-                      placeholder="Título (opcional)"
-                      value={slide.title}
-                      onChange={(e) => {
-                        const newImages = [...carouselImages]
-                        newImages[index].title = e.target.value
-                        setCarouselImages(newImages)
-                      }}
-                      style={styles.input}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Subtítulo (opcional)"
-                      value={slide.subtitle}
-                      onChange={(e) => {
-                        const newImages = [...carouselImages]
-                        newImages[index].subtitle = e.target.value
-                        setCarouselImages(newImages)
-                      }}
-                      style={styles.input}
-                    />
-                  </div>
+                <input
+                  type="text"
+                  placeholder="Título (opcional)"
+                  value={img.title || ''}
+                  onChange={(e) => {
+                    setCarouselImages(prev =>
+                      prev.map(item =>
+                        item.localId === img.localId
+                          ? { ...item, title: e.target.value }
+                          : item
+                      )
+                    )
+                  }}
+                  style={styles.input}
+                />
 
-                  {carouselImages.length > 1 && (
-                    <button
-                      type="button"
-                      style={styles.removeSlideButton}
-                      onClick={() => removeCarouselSlide(index)}
-                    >
-                      🗑️ Remover
-                    </button>
-                  )}
+                <input
+                  type="text"
+                  placeholder="Subtítulo (opcional)"
+                  value={img.subtitle || ''}
+                  onChange={(e) => {
+                    setCarouselImages(prev =>
+                      prev.map(item =>
+                        item.localId === img.localId
+                          ? { ...item, subtitle: e.target.value }
+                          : item
+                      )
+                    )
+                  }}
+                  style={styles.input}
+                />
 
-                  <div style={styles.dragHandle}>⋮⋮</div>
-                </div>
-              ))}
-            </div>
+                {carouselImages.length > 1 && (
+                  <button
+                    style={styles.removeBtn}
+                    onClick={() => setCarouselImages(prev => prev.filter(x => x.localId !== img.localId))}
+                  >
+                    🗑️ Remover
+                  </button>
+                )}
+              </div>
+            ))}
 
-            <button style={styles.addSlideButton} onClick={addCarouselSlide}>
+            <button
+              style={styles.addBtn}
+              onClick={() => {
+                const newId = Math.max(...carouselImages.map(x => x.localId)) + 1
+                setCarouselImages([...carouselImages, {
+                  localId: newId,
+                  id: String(newId),
+                  imageUrl: '',
+                  title: '',
+                  subtitle: '',
+                }])
+              }}
+            >
               ➕ Adicionar Slide
             </button>
 
-            <button style={styles.saveButton} onClick={handleSaveCarousel}>
-              💾 Salvar Carrossel
+            <button style={styles.saveBtn} onClick={saveCarrossel}>
+              💾 SALVAR CARROSSEL
             </button>
           </div>
         )
 
       case 'aparencia':
         return (
-          <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Aparência</h2>
+          <div style={styles.tab}>
+            <h2 style={styles.title}>Aparência</h2>
 
-            {/* Cor de Fundo */}
-            <div style={styles.field}>
-              <label style={styles.label}>Cor de Fundo</label>
-              <div style={styles.colorPickerWrapper}>
-                <input
-                  type="color"
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  style={styles.colorPicker}
-                />
-                <input
-                  type="text"
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  style={styles.colorInput}
-                />
+            {[
+              { label: 'Cor de Fundo', value: backgroundColor, setter: setBackgroundColor },
+              { label: 'Cor Primária (Botões)', value: primaryColor, setter: setPrimaryColor },
+              { label: 'Cor do Texto do Botão', value: buttonTextColor, setter: setButtonTextColor },
+              { label: 'Cor do Texto Principal', value: textColor, setter: setTextColor },
+              { label: 'Cor do Texto Secundário', value: secondaryTextColor, setter: setSecondaryTextColor },
+            ].map((color, i) => (
+              <div key={i} style={{ marginBottom: '2rem' }}>
+                <label style={styles.label}>{color.label}</label>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <input
+                    type="color"
+                    value={color.value}
+                    onChange={(e) => color.setter(e.target.value)}
+                    style={styles.colorPicker}
+                  />
+                  <input
+                    type="text"
+                    value={color.value}
+                    onChange={(e) => color.setter(e.target.value)}
+                    style={{ ...styles.input, flex: 1 }}
+                  />
+                </div>
+                <div style={{ ...styles.colorPreview, backgroundColor: color.value }} />
               </div>
-              <div style={{ ...styles.colorPreview, backgroundColor }} />
-            </div>
+            ))}
 
-            {/* Cor Primária */}
-            <div style={styles.field}>
-              <label style={styles.label}>Cor Primária (Botões)</label>
-              <div style={styles.colorPickerWrapper}>
-                <input
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  style={styles.colorPicker}
-                />
-                <input
-                  type="text"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  style={styles.colorInput}
-                />
-              </div>
-              <div style={{ ...styles.colorPreview, backgroundColor: primaryColor }} />
-            </div>
-
-            {/* COR DO TEXTO DO BOTÃO - NOVO! */}
-            <div style={styles.field}>
-              <label style={styles.label}>Cor do Texto do Botão ⭐ NOVO!</label>
-              <div style={styles.colorPickerWrapper}>
-                <input
-                  type="color"
-                  value={buttonTextColor}
-                  onChange={(e) => setButtonTextColor(e.target.value)}
-                  style={styles.colorPicker}
-                />
-                <input
-                  type="text"
-                  value={buttonTextColor}
-                  onChange={(e) => setButtonTextColor(e.target.value)}
-                  style={styles.colorInput}
-                />
-              </div>
-              <div style={{ ...styles.colorPreview, backgroundColor: buttonTextColor }} />
-            </div>
-
-            {/* Cor do Texto Principal */}
-            <div style={styles.field}>
-              <label style={styles.label}>Cor do Texto Principal</label>
-              <div style={styles.colorPickerWrapper}>
-                <input
-                  type="color"
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
-                  style={styles.colorPicker}
-                />
-                <input
-                  type="text"
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
-                  style={styles.colorInput}
-                />
-              </div>
-              <div style={{ ...styles.colorPreview, backgroundColor: textColor }} />
-            </div>
-
-            {/* Cor do Texto Secundário */}
-            <div style={styles.field}>
-              <label style={styles.label}>Cor do Texto Secundário</label>
-              <div style={styles.colorPickerWrapper}>
-                <input
-                  type="color"
-                  value={secondaryTextColor}
-                  onChange={(e) => setSecondaryTextColor(e.target.value)}
-                  style={styles.colorPicker}
-                />
-                <input
-                  type="text"
-                  value={secondaryTextColor}
-                  onChange={(e) => setSecondaryTextColor(e.target.value)}
-                  style={styles.colorInput}
-                />
-              </div>
-              <div style={{ ...styles.colorPreview, backgroundColor: secondaryTextColor }} />
-            </div>
-
-            {/* Preview */}
-            <div style={styles.previewSection}>
-              <h3 style={styles.previewTitle}>Preview:</h3>
-              <div style={{ ...styles.screenPreview, backgroundColor }}>
-                {logoPreview && (
-                  <img src={logoPreview} alt="Logo" style={styles.mockLogoImage} />
-                )}
-                <h1 style={{ ...styles.mockStoreName, color: textColor }}>{storeName}</h1>
-                <p style={{ ...styles.mockTagline, color: secondaryTextColor }}>Hambúrgueres artesanais</p>
-                <button style={{ 
-                  ...styles.mockButton, 
-                  backgroundColor: primaryColor,
-                  color: buttonTextColor,
-                }}>
-                  {buttonText}
-                </button>
-              </div>
-            </div>
-
-            <button style={styles.saveButton} onClick={handleSaveAppearance}>
-              💾 Salvar Aparência
+            <button style={styles.saveBtn} onClick={saveAppearance}>
+              💾 SALVAR CORES
             </button>
           </div>
         )
 
-      case 'formas-pagamento':
+      case 'pagamentos':
         return (
-          <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Formas de Pagamento</h2>
-            <div style={styles.comingSoon}>
-              <p>🚧 Em desenvolvimento</p>
-            </div>
+          <div style={styles.tab}>
+            <h2 style={styles.title}>Formas de Pagamento</h2>
+
+            {paymentMethods.map((method) => (
+              <div key={method.id} style={styles.paymentRow}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ fontSize: '2rem' }}>{method.icon}</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>{method.name}</span>
+                </div>
+                <label style={styles.switch}>
+                  <input
+                    type="checkbox"
+                    checked={method.enabled}
+                    onChange={() => {
+                      setPaymentMethods(prev =>
+                        prev.map(m =>
+                          m.id === method.id ? { ...m, enabled: !m.enabled } : m
+                        )
+                      )
+                    }}
+                    style={styles.switchInput}
+                  />
+                  <span style={{
+                    ...styles.slider,
+                    backgroundColor: method.enabled ? '#10B981' : '#D1D5DB',
+                  }} />
+                </label>
+              </div>
+            ))}
+
+            <button style={styles.saveBtn} onClick={savePayments}>
+              💾 SALVAR PAGAMENTOS
+            </button>
           </div>
         )
 
       case 'estatisticas':
         return (
-          <div style={styles.tabContent}>
-            <h2 style={styles.sectionTitle}>Estatísticas em Tempo Real</h2>
+          <div style={styles.tab}>
+            <h2 style={styles.title}>Estatísticas em Tempo Real</h2>
 
             <div style={styles.statsGrid}>
-              <div style={styles.statCard}>
-                <div style={styles.statIcon}>📊</div>
-                <div style={styles.statInfo}>
-                  <p style={styles.statLabel}>Pedidos Hoje</p>
-                  <p style={styles.statValue}>{stats.pedidosHoje}</p>
+              {[
+                { icon: '📊', label: 'Pedidos Hoje', value: stats.pedidosHoje },
+                { icon: '💰', label: 'Faturamento Hoje', value: `R$ ${stats.totalHoje.toFixed(2)}` },
+                { icon: '📅', label: 'Pedidos Semana', value: stats.pedidosSemana },
+                { icon: '💵', label: 'Faturamento Semana', value: `R$ ${stats.totalSemana.toFixed(2)}` },
+                { icon: '📆', label: 'Pedidos Mês', value: stats.pedidosMes },
+                { icon: '💸', label: 'Faturamento Mês', value: `R$ ${stats.totalMes.toFixed(2)}` },
+                { icon: '🍔', label: 'Mais Vendido', value: stats.produtoMaisVendido },
+                { icon: '🎯', label: 'Ticket Médio', value: `R$ ${stats.ticketMedio.toFixed(2)}` },
+              ].map((stat, i) => (
+                <div key={i} style={styles.statCard}>
+                  <div style={{ fontSize: '3rem' }}>{stat.icon}</div>
+                  <div>
+                    <p style={styles.statLabel}>{stat.label}</p>
+                    <p style={styles.statValue}>{stat.value}</p>
+                  </div>
                 </div>
-              </div>
-
-              <div style={styles.statCard}>
-                <div style={styles.statIcon}>💰</div>
-                <div style={styles.statInfo}>
-                  <p style={styles.statLabel}>Faturamento Hoje</p>
-                  <p style={styles.statValue}>R$ {stats.totalHoje.toFixed(2)}</p>
-                </div>
-              </div>
-
-              <div style={styles.statCard}>
-                <div style={styles.statIcon}>📅</div>
-                <div style={styles.statInfo}>
-                  <p style={styles.statLabel}>Pedidos Semana</p>
-                  <p style={styles.statValue}>{stats.pedidosSemana}</p>
-                </div>
-              </div>
-
-              <div style={styles.statCard}>
-                <div style={styles.statIcon}>💵</div>
-                <div style={styles.statInfo}>
-                  <p style={styles.statLabel}>Faturamento Semana</p>
-                  <p style={styles.statValue}>R$ {stats.totalSemana.toFixed(2)}</p>
-                </div>
-              </div>
-
-              <div style={styles.statCard}>
-                <div style={styles.statIcon}>📆</div>
-                <div style={styles.statInfo}>
-                  <p style={styles.statLabel}>Pedidos Mês</p>
-                  <p style={styles.statValue}>{stats.pedidosMes}</p>
-                </div>
-              </div>
-
-              <div style={styles.statCard}>
-                <div style={styles.statIcon}>💸</div>
-                <div style={styles.statInfo}>
-                  <p style={styles.statLabel}>Faturamento Mês</p>
-                  <p style={styles.statValue}>R$ {stats.totalMes.toFixed(2)}</p>
-                </div>
-              </div>
-
-              <div style={styles.statCard}>
-                <div style={styles.statIcon}>🍔</div>
-                <div style={styles.statInfo}>
-                  <p style={styles.statLabel}>Mais Vendido</p>
-                  <p style={styles.statValue}>{stats.produtoMaisVendido}</p>
-                </div>
-              </div>
-
-              <div style={styles.statCard}>
-                <div style={styles.statIcon}>🎯</div>
-                <div style={styles.statInfo}>
-                  <p style={styles.statLabel}>Ticket Médio</p>
-                  <p style={styles.statValue}>R$ {stats.ticketMedio.toFixed(2)}</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         )
@@ -552,27 +398,23 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <div>
-          <h1 style={styles.headerTitle}>⚙️ Painel Administrativo</h1>
-        </div>
-        <button style={styles.closeButton} onClick={onClose}>
-          ✕ Fechar
-        </button>
+        <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>⚙️ Painel Admin</h1>
+        <button style={styles.closeBtn} onClick={onClose}>✕ Fechar</button>
       </div>
 
-      <div style={styles.mainLayout}>
+      <div style={styles.layout}>
         <div style={styles.sidebar}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
               style={{
-                ...styles.tabButton,
+                ...styles.tabBtn,
                 backgroundColor: activeTab === tab.id ? '#E11D48' : 'transparent',
                 color: activeTab === tab.id ? '#FFFFFF' : '#374151',
               }}
               onClick={() => setActiveTab(tab.id)}
             >
-              <span style={styles.tabIcon}>{tab.icon}</span>
+              <span style={{ fontSize: '1.5rem' }}>{tab.icon}</span>
               <span>{tab.label}</span>
             </button>
           ))}
@@ -586,7 +428,6 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
   )
 }
 
-// CONTINUA NO PRÓXIMO ARQUIVO COM OS ESTILOS...
 const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
@@ -598,20 +439,14 @@ const styles: Record<string, React.CSSProperties> = {
 
   header: {
     display: 'flex',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     padding: '2rem',
     backgroundColor: '#FFFFFF',
     borderBottom: '1px solid #E5E7EB',
   },
 
-  headerTitle: {
-    fontSize: '1.875rem',
-    fontWeight: 700,
-    margin: 0,
-  },
-
-  closeButton: {
+  closeBtn: {
     padding: '0.75rem 1.5rem',
     fontSize: '1.125rem',
     fontWeight: 600,
@@ -621,7 +456,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
 
-  mainLayout: {
+  layout: {
     display: 'flex',
     flex: 1,
   },
@@ -636,10 +471,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.25rem',
   },
 
-  tabButton: {
+  tabBtn: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
+    gap: '1rem',
     padding: '1rem',
     fontSize: '1rem',
     fontWeight: 500,
@@ -649,27 +484,19 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'left',
   },
 
-  tabIcon: {
-    fontSize: '1.25rem',
-  },
-
   content: {
     flex: 1,
     padding: '2rem',
     overflowY: 'auto',
   },
 
-  tabContent: {
-    maxWidth: '900px',
+  tab: {
+    maxWidth: '800px',
   },
 
-  sectionTitle: {
-    fontSize: '1.5rem',
+  title: {
+    fontSize: '1.875rem',
     fontWeight: 700,
-    marginBottom: '1.5rem',
-  },
-
-  field: {
     marginBottom: '2rem',
   },
 
@@ -678,6 +505,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1rem',
     fontWeight: 600,
     marginBottom: '0.5rem',
+    marginTop: '1rem',
   },
 
   input: {
@@ -686,13 +514,14 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1rem',
     border: '2px solid #D1D5DB',
     borderRadius: '0.5rem',
+    marginBottom: '1rem',
   },
 
   fileInput: {
     display: 'none',
   },
 
-  uploadButton: {
+  uploadBtn: {
     padding: '0.75rem 1.5rem',
     fontSize: '1rem',
     fontWeight: 600,
@@ -701,39 +530,20 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
     borderRadius: '0.5rem',
     cursor: 'pointer',
+    marginBottom: '1rem',
   },
 
-  imagePreviewBox: {
-    marginTop: '1rem',
-    padding: '1rem',
-    backgroundColor: '#F3F4F6',
-    borderRadius: '0.5rem',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '1rem',
-  },
-
-  logoPreviewImage: {
+  preview: {
     maxWidth: '200px',
     maxHeight: '200px',
     objectFit: 'contain',
-  },
-
-  removeImageButton: {
-    padding: '0.5rem 1rem',
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    backgroundColor: '#EF4444',
-    color: '#FFFFFF',
-    border: 'none',
+    marginTop: '1rem',
+    marginBottom: '1rem',
+    border: '2px solid #E5E7EB',
     borderRadius: '0.5rem',
-    cursor: 'pointer',
   },
 
-  imageSizeInfo: {
-    display: 'flex',
-    gap: '1rem',
+  alert: {
     padding: '1.5rem',
     backgroundColor: '#DBEAFE',
     border: '2px solid #3B82F6',
@@ -741,101 +551,31 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '2rem',
   },
 
-  imageSizeIcon: {
-    fontSize: '3rem',
-  },
-
-  imageSizeTitle: {
+  alertText: {
     fontSize: '1rem',
-    fontWeight: 600,
     color: '#1E40AF',
     margin: 0,
   },
 
-  imageSizeValue: {
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    color: '#1E3A8A',
-    margin: 0,
-  },
-
-  carouselList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem',
-    marginBottom: '1.5rem',
-  },
-
-  carouselItem: {
-    position: 'relative',
+  slideBox: {
     padding: '1.5rem',
     backgroundColor: '#FFFFFF',
     border: '2px solid #E5E7EB',
     borderRadius: '0.75rem',
-    cursor: 'move',
-  },
-
-  slideNumber: {
-    position: 'absolute',
-    top: '1rem',
-    left: '1rem',
-    width: '32px',
-    height: '32px',
-    backgroundColor: '#E11D48',
-    color: '#FFFFFF',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '0.875rem',
-    fontWeight: 700,
-  },
-
-  dragHandle: {
-    position: 'absolute',
-    top: '1rem',
-    right: '1rem',
-    fontSize: '1.5rem',
-    color: '#9CA3AF',
-  },
-
-  slideImageArea: {
-    width: '100%',
-    height: '200px',
-    marginBottom: '1rem',
-    backgroundColor: '#F3F4F6',
-    borderRadius: '0.5rem',
-    overflow: 'hidden',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: '1.5rem',
   },
 
   slidePreview: {
     width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-
-  uploadPlaceholder: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-    fontSize: '1rem',
-    color: '#6B7280',
-    cursor: 'pointer',
-  },
-
-  slideFields: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-  },
-
-  removeSlideButton: {
+    maxHeight: '300px',
+    objectFit: 'contain',
+    backgroundColor: '#000000',
+    borderRadius: '0.5rem',
     marginTop: '1rem',
+    marginBottom: '1rem',
+  },
+
+  removeBtn: {
     padding: '0.5rem 1rem',
     fontSize: '0.875rem',
     fontWeight: 600,
@@ -844,10 +584,12 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
     borderRadius: '0.5rem',
     cursor: 'pointer',
+    marginTop: '1rem',
   },
 
-  addSlideButton: {
-    padding: '1rem 2rem',
+  addBtn: {
+    width: '100%',
+    padding: '1rem',
     fontSize: '1rem',
     fontWeight: 700,
     backgroundColor: '#10B981',
@@ -855,14 +597,20 @@ const styles: Record<string, React.CSSProperties> = {
     border: 'none',
     borderRadius: '0.5rem',
     cursor: 'pointer',
-    width: '100%',
     marginBottom: '1rem',
   },
 
-  colorPickerWrapper: {
-    display: 'flex',
-    gap: '0.75rem',
-    alignItems: 'center',
+  saveBtn: {
+    width: '100%',
+    padding: '1rem 2rem',
+    fontSize: '1.125rem',
+    fontWeight: 700,
+    backgroundColor: '#E11D48',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '0.5rem',
+    cursor: 'pointer',
+    marginTop: '2rem',
   },
 
   colorPicker: {
@@ -873,14 +621,6 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
 
-  colorInput: {
-    flex: 1,
-    padding: '0.75rem',
-    fontSize: '1rem',
-    border: '2px solid #D1D5DB',
-    borderRadius: '0.5rem',
-  },
-
   colorPreview: {
     width: '100%',
     height: '60px',
@@ -889,53 +629,39 @@ const styles: Record<string, React.CSSProperties> = {
     border: '2px solid #D1D5DB',
   },
 
-  previewSection: {
-    marginTop: '2rem',
-    padding: '1.5rem',
-    backgroundColor: '#F3F4F6',
-    borderRadius: '0.75rem',
-  },
-
-  previewTitle: {
-    fontSize: '1.125rem',
-    fontWeight: 700,
-    marginBottom: '1.5rem',
-  },
-
-  screenPreview: {
-    padding: '2rem',
-    borderRadius: '0.5rem',
+  paymentRow: {
     display: 'flex',
-    flexDirection: 'column',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '1rem',
-    minHeight: '300px',
-    justifyContent: 'center',
-  },
-
-  mockLogoImage: {
-    maxWidth: '120px',
-    maxHeight: '120px',
-    objectFit: 'contain',
-  },
-
-  mockStoreName: {
-    fontSize: '2rem',
-    fontWeight: 700,
-    margin: 0,
-  },
-
-  mockTagline: {
-    fontSize: '1rem',
-    margin: 0,
-  },
-
-  mockButton: {
-    padding: '1rem 2rem',
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    border: 'none',
+    padding: '1.5rem',
+    backgroundColor: '#FFFFFF',
+    border: '2px solid #E5E7EB',
     borderRadius: '0.75rem',
+    marginBottom: '1rem',
+  },
+
+  switch: {
+    position: 'relative',
+    display: 'inline-block',
+    width: '60px',
+    height: '34px',
+  },
+
+  switchInput: {
+    opacity: 0,
+    width: 0,
+    height: 0,
+  },
+
+  slider: {
+    position: 'absolute',
+    cursor: 'pointer',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: '34px',
+    transition: 'all 300ms ease-in-out',
   },
 
   statsGrid: {
@@ -954,45 +680,17 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '0.75rem',
   },
 
-  statIcon: {
-    fontSize: '3rem',
-  },
-
-  statInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-
   statLabel: {
     fontSize: '0.875rem',
     color: '#6B7280',
     margin: 0,
+    marginBottom: '0.25rem',
   },
 
   statValue: {
     fontSize: '1.5rem',
     fontWeight: 700,
     margin: 0,
-  },
-
-  comingSoon: {
-    padding: '2rem',
-    textAlign: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: '0.75rem',
-  },
-
-  saveButton: {
-    padding: '1rem 2rem',
-    fontSize: '1rem',
-    fontWeight: 700,
-    backgroundColor: '#E11D48',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-    marginTop: '1rem',
   },
 }
 
