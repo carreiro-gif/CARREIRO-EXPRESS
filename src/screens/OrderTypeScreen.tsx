@@ -15,6 +15,7 @@ const OrderTypeScreen: React.FC<OrderTypeScreenProps> = ({ onSelectType, onBack 
 
   const handleSelect = (type: OrderType) => {
     setSelected(type)
+    // Pequeno delay para feedback visual
     setTimeout(() => {
       onSelectType(type)
     }, 300)
@@ -22,48 +23,57 @@ const OrderTypeScreen: React.FC<OrderTypeScreenProps> = ({ onSelectType, onBack 
 
   return (
     <div style={styles.container}>
+      {/* Header */}
       <div style={styles.header}>
         <button style={styles.backButton} onClick={onBack}>
           ← Voltar
         </button>
       </div>
 
+      {/* Conteúdo principal */}
       <div style={styles.content}>
         <h1 style={styles.title}>Como você vai consumir?</h1>
         <p style={styles.subtitle}>Escolha uma opção para continuar</p>
 
+        {/* Opções */}
         <div style={styles.optionsGrid}>
+          {/* Para Viagem */}
           <button
             style={{
               ...styles.optionButton,
               backgroundColor: selected === 'takeout'
-                ? '#E11D48'
-                : '#FFFFFF',
+                ? theme.colors.primary.main
+                : theme.colors.background.paper,
               transform: selected === 'takeout' ? 'scale(0.98)' : 'scale(1)',
             }}
             onClick={() => handleSelect('takeout')}
           >
-            <div style={styles.optionIcon}>🥡</div>
+            <div style={styles.optionIcon}>🏍️</div>
             <h2 style={{
               ...styles.optionTitle,
-              color: selected === 'takeout' ? '#FFFFFF' : '#111827',
+              color: selected === 'takeout'
+                ? theme.colors.neutral.white
+                : theme.colors.neutral.gray[900],
             }}>
               Para Viagem
             </h2>
             <p style={{
               ...styles.optionDescription,
-              color: selected === 'takeout' ? '#FFFFFF' : '#6B7280',
+              color: selected === 'takeout'
+                ? theme.colors.neutral.white
+                : theme.colors.neutral.gray[600],
             }}>
               Levar para consumir em outro local
             </p>
           </button>
 
+          {/* Comer Aqui */}
           <button
             style={{
               ...styles.optionButton,
               backgroundColor: selected === 'dine-in'
-                ? '#E11D48'
-                : '#FFFFFF',
+                ? theme.colors.primary.main
+                : theme.colors.background.paper,
               transform: selected === 'dine-in' ? 'scale(0.98)' : 'scale(1)',
             }}
             onClick={() => handleSelect('dine-in')}
@@ -71,13 +81,17 @@ const OrderTypeScreen: React.FC<OrderTypeScreenProps> = ({ onSelectType, onBack 
             <div style={styles.optionIcon}>🍽️</div>
             <h2 style={{
               ...styles.optionTitle,
-              color: selected === 'dine-in' ? '#FFFFFF' : '#111827',
+              color: selected === 'dine-in'
+                ? theme.colors.neutral.white
+                : theme.colors.neutral.gray[900],
             }}>
               Comer Aqui
             </h2>
             <p style={{
               ...styles.optionDescription,
-              color: selected === 'dine-in' ? '#FFFFFF' : '#6B7280',
+              color: selected === 'dine-in'
+                ? theme.colors.neutral.white
+                : theme.colors.neutral.gray[600],
             }}>
               Consumir no local
             </p>
@@ -92,26 +106,26 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     minHeight: '100vh',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.background.default,
     display: 'flex',
     flexDirection: 'column',
   },
 
   header: {
-    padding: '2rem',
-    backgroundColor: '#FFFFFF',
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.background.paper,
+    boxShadow: theme.shadows.sm,
   },
 
   backButton: {
-    padding: '0.75rem 1.5rem',
-    fontSize: '1.125rem',
-    fontWeight: 600,
-    backgroundColor: '#F3F4F6',
+    padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    backgroundColor: theme.colors.neutral.gray[100],
     border: 'none',
-    borderRadius: '0.5rem',
+    borderRadius: theme.borderRadius.md,
     cursor: 'pointer',
-    transition: 'all 150ms ease-in-out',
+    transition: `all ${theme.transitions.fast}`,
   },
 
   content: {
@@ -120,21 +134,21 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '4rem',
-    gap: '2rem',
+    padding: theme.spacing['3xl'],
+    gap: theme.spacing.xl,
   },
 
   title: {
-    fontSize: '2.25rem',
-    fontWeight: 700,
-    color: '#111827',
+    fontSize: theme.typography.fontSize['4xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.neutral.gray[900],
     textAlign: 'center',
     margin: 0,
   },
 
   subtitle: {
-    fontSize: '1.25rem',
-    color: '#6B7280',
+    fontSize: theme.typography.fontSize.xl,
+    color: theme.colors.neutral.gray[600],
     textAlign: 'center',
     margin: 0,
   },
@@ -142,10 +156,10 @@ const styles: Record<string, React.CSSProperties> = {
   optionsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-    gap: '3rem',
+    gap: theme.spacing['2xl'],
     width: '100%',
     maxWidth: '800px',
-    marginTop: '2rem',
+    marginTop: theme.spacing.xl,
   },
 
   optionButton: {
@@ -153,14 +167,14 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '1.5rem',
-    padding: '3rem',
+    gap: theme.spacing.lg,
+    padding: theme.spacing['3xl'],
     minHeight: '320px',
-    border: '3px solid #E5E7EB',
-    borderRadius: '1rem',
+    border: `3px solid ${theme.colors.neutral.gray[200]}`,
+    borderRadius: theme.borderRadius.xl,
     cursor: 'pointer',
-    transition: 'all 150ms ease-in-out',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+    transition: `all ${theme.transitions.fast}`,
+    boxShadow: theme.shadows.lg,
   },
 
   optionIcon: {
@@ -169,13 +183,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   optionTitle: {
-    fontSize: '1.875rem',
-    fontWeight: 700,
+    fontSize: theme.typography.fontSize['3xl'],
+    fontWeight: theme.typography.fontWeight.bold,
     margin: 0,
   },
 
   optionDescription: {
-    fontSize: '1.125rem',
+    fontSize: theme.typography.fontSize.lg,
     textAlign: 'center',
     margin: 0,
   },
