@@ -1,4 +1,4 @@
-// src/screens/AdminScreen.tsx - VERSÃO SIMPLIFICADA E FUNCIONAL
+// src/screens/AdminScreen.tsx - COM BARRA DE ROLAGEM + TAMANHO CORRETO
 
 import React, { useState, useRef } from 'react'
 import { useConfig } from '../context/ConfigContext'
@@ -84,7 +84,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
       buttonText,
       logoUrl: logoPreview || null,
     })
-    alert('✅ Salvo!')
+    alert('✅ Configurações gerais salvas!')
   }
 
   // SALVAR - CARROSSEL
@@ -94,8 +94,8 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
       .map(img => ({
         id: img.id,
         imageUrl: img.imageUrl,
-        title: img.title,
-        subtitle: img.subtitle,
+        title: img.title || '',
+        subtitle: img.subtitle || '',
       }))
 
     updateConfig({ carouselSlides: slides })
@@ -133,7 +133,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
     switch (activeTab) {
       case 'geral':
         return (
-          <div style={styles.tab}>
+          <div style={styles.scrollableContent}>
             <h2 style={styles.title}>Configurações Gerais</h2>
 
             <label style={styles.label}>Nome da Loja</label>
@@ -144,7 +144,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
               style={styles.input}
             />
 
-            <label style={styles.label}>Slogan/Tagline (ex: Hambúrgueres artesanais)</label>
+            <label style={styles.label}>Slogan/Tagline</label>
             <input
               type="text"
               value={tagline}
@@ -188,20 +188,22 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
 
       case 'carrossel':
         return (
-          <div style={styles.tab}>
+          <div style={styles.scrollableContent}>
             <h2 style={styles.title}>Carrossel</h2>
             
             <div style={styles.alert}>
               <p style={styles.alertText}>
-                📐 Tamanho: <strong>Qualquer tamanho vertical</strong> (ex: 1080x1920)
+                📐 <strong>TAMANHO IDEAL: 3189 x 2800 pixels</strong>
                 <br />
-                ✅ A imagem será exibida INTEIRA, sem cortes
+                ✅ Use exatamente este tamanho para melhor qualidade
+                <br />
+                💡 Proporção horizontal que preenche bem a tela
               </p>
             </div>
 
             {carouselImages.map((img, i) => (
               <div key={img.localId} style={styles.slideBox}>
-                <h3>Slide #{i + 1}</h3>
+                <h3 style={styles.slideTitle}>Slide #{i + 1}</h3>
                 
                 <input
                   type="file"
@@ -214,7 +216,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
                   style={styles.uploadBtn}
                   onClick={() => document.getElementById(`slide-${i}`)?.click()}
                 >
-                  📷 Escolher Imagem
+                  📷 Escolher Imagem (3189 x 2800)
                 </button>
 
                 {img.imageUrl && (
@@ -288,7 +290,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
 
       case 'aparencia':
         return (
-          <div style={styles.tab}>
+          <div style={styles.scrollableContent}>
             <h2 style={styles.title}>Aparência</h2>
 
             {[
@@ -326,7 +328,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
 
       case 'pagamentos':
         return (
-          <div style={styles.tab}>
+          <div style={styles.scrollableContent}>
             <h2 style={styles.title}>Formas de Pagamento</h2>
 
             {paymentMethods.map((method) => (
@@ -364,7 +366,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
 
       case 'estatisticas':
         return (
-          <div style={styles.tab}>
+          <div style={styles.scrollableContent}>
             <h2 style={styles.title}>Estatísticas em Tempo Real</h2>
 
             <div style={styles.statsGrid}>
@@ -431,10 +433,11 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
 const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
-    minHeight: '100vh',
+    height: '100vh',
     backgroundColor: '#F9FAFB',
     display: 'flex',
     flexDirection: 'column',
+    overflow: 'hidden', // IMPORTANTE: Evita scroll duplo
   },
 
   header: {
@@ -444,6 +447,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '2rem',
     backgroundColor: '#FFFFFF',
     borderBottom: '1px solid #E5E7EB',
+    flexShrink: 0, // Não encolhe
   },
 
   closeBtn: {
@@ -459,6 +463,7 @@ const styles: Record<string, React.CSSProperties> = {
   layout: {
     display: 'flex',
     flex: 1,
+    overflow: 'hidden', // IMPORTANTE
   },
 
   sidebar: {
@@ -469,6 +474,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
+    overflowY: 'auto', // Barra de rolagem lateral SE necessário
+    flexShrink: 0,
   },
 
   tabBtn: {
@@ -482,22 +489,28 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '0.5rem',
     cursor: 'pointer',
     textAlign: 'left',
+    transition: 'all 150ms',
   },
 
   content: {
     flex: 1,
-    padding: '2rem',
-    overflowY: 'auto',
+    overflow: 'hidden', // IMPORTANTE: Container não rola
+    backgroundColor: '#F9FAFB',
   },
 
-  tab: {
-    maxWidth: '800px',
+  // NOVO: Conteúdo com barra de rolagem
+  scrollableContent: {
+    height: '100%',
+    overflowY: 'auto', // ✅ BARRA DE ROLAGEM AQUI!
+    padding: '2rem',
+    maxWidth: '900px',
   },
 
   title: {
     fontSize: '1.875rem',
     fontWeight: 700,
     marginBottom: '2rem',
+    color: '#111827',
   },
 
   label: {
@@ -506,6 +519,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     marginBottom: '0.5rem',
     marginTop: '1rem',
+    color: '#374151',
   },
 
   input: {
@@ -555,6 +569,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1rem',
     color: '#1E40AF',
     margin: 0,
+    lineHeight: 1.6,
   },
 
   slideBox: {
@@ -563,6 +578,13 @@ const styles: Record<string, React.CSSProperties> = {
     border: '2px solid #E5E7EB',
     borderRadius: '0.75rem',
     marginBottom: '1.5rem',
+  },
+
+  slideTitle: {
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    marginBottom: '1rem',
+    color: '#111827',
   },
 
   slidePreview: {
@@ -691,6 +713,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1.5rem',
     fontWeight: 700,
     margin: 0,
+    color: '#111827',
   },
 }
 
