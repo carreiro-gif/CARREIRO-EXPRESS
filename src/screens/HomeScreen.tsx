@@ -17,7 +17,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
   const [password, setPassword] = useState('')
   const clickTimeout = useRef<NodeJS.Timeout | null>(null)
 
-  const ADMIN_PASSWORD = '1234'
+  const ADMIN_PASSWORD = localStorage.getItem('carreiro-admin-password') || '1234'
   const CLICKS_NEEDED = 3
 
   const handleLogoClick = () => {
