@@ -8,7 +8,7 @@ interface AdminScreenProps {
   onClose: () => void
 }
 
-type AdminTab = 'geral' | 'carrossel' | 'aparencia' | 'pagamentos' | 'estatisticas'
+type AdminTab = 'geral' | 'carrossel' | 'aparencia' | 'pagamentos' | 'estatisticas' | 'senha'
 
 const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
   const { config, updateConfig } = useConfig()
@@ -21,6 +21,9 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
   const [buttonText, setButtonText] = useState(config.buttonText)
   const [logoPreview, setLogoPreview] = useState(config.logoUrl || '')
   const logoInputRef = useRef<HTMLInputElement>(null)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
   // Cores
   const [backgroundColor, setBackgroundColor] = useState(config.backgroundColor)
@@ -127,6 +130,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
     { id: 'aparencia' as AdminTab, label: 'Aparência', icon: '🎨' },
     { id: 'pagamentos' as AdminTab, label: 'Pagamentos', icon: '💳' },
     { id: 'estatisticas' as AdminTab, label: 'Estatísticas', icon: '📊' },
+    { id: 'senha' as AdminTab, label: 'Senha', icon: '🔐' },
   ]
 
   const renderContent = () => {
@@ -390,7 +394,110 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
               ))}
             </div>
           </div>
-        )
+        )typescript
+case 'senha':
+  return (
+    <div style={styles.scrollableContent}>
+      <h2 style={styles.title}>🔐 Trocar Senha do Admin</h2>
+
+      <div style={styles.alert}>
+        <p style={styles.alertText}>
+          🔒 Senha padrão: <strong>1234</strong>
+          <br />
+          💡 Troque por uma senha segura que você lembrará
+        </p>
+      </div>
+
+      <label style={styles.label}>Senha Atual</label>
+      <input
+        type="password"
+        value={currentPassword}
+        onChange={(e) => setCurrentPassword(e.target.value)}
+        style={styles.input}
+        placeholder="Digite a senha atual (padrão: 1234)"
+      />
+
+      <label style={styles.label}>Nova Senha (mínimo 4 caracteres)</label>
+      <input
+        type="password"
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        style={styles.input}
+        placeholder="Digite a nova senha"
+      />
+
+      <label style={styles.label}>Confirmar Nova Senha</label>
+      <input
+        type="password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        style={styles.input}
+        placeholder="Digite novamente a nova senha"
+      />
+
+      <button
+        style={styles.saveBtn}
+        onClick={() => {
+          const savedPassword = localStorage.getItem('carreiro-admin-password') || '1234'
+
+          if (currentPassword !== savedPassword) {
+            alert('❌ Senha atual incorreta!')
+            return
+          }
+
+          if (newPassword.length < 4) {
+            alert('❌ Nova senha deve ter pelo menos 4 caracteres!')
+            return
+          }
+
+          if (newPassword !== confirmPassword) {
+            alert('❌ As senhas não coincidem!')
+            return
+          }
+
+          localStorage.setItem('carreiro-admin-password', newPassword)
+          alert('✅ Senha alterada com sucesso!')
+          
+          setCurrentPassword('')
+          setNewPassword('')
+          setConfirmPassword('')
+        }}
+      >
+        🔐 TROCAR SENHA
+      </button>
+
+      <div style={{
+        marginTop: '3rem',
+        padding: '2rem',
+        backgroundColor: '#FEF3C7',
+        border: '2px solid #F59E0B',
+        borderRadius: '0.75rem',
+      }}>
+        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem', color: '#92400E' }}>
+          ⚠️ ESQUECEU A SENHA?
+        </h3>
+        <p style={{ fontSize: '1rem', color: '#78350F', marginBottom: '1rem', lineHeight: 1.6 }}>
+          Se você esqueceu a senha, siga estes passos:
+        </p>
+        <ol style={{ fontSize: '1rem', color: '#78350F', paddingLeft: '1.5rem', lineHeight: 1.8 }}>
+          <li>Tecle <strong>F12</strong> para abrir o Console do navegador</li>
+          <li>Clique na aba <strong>"Console"</strong></li>
+          <li>Digite exatamente isto: <code style={{ 
+            backgroundColor: '#FFF', 
+            padding: '0.5rem', 
+            borderRadius: '0.25rem',
+            fontSize: '0.875rem',
+            display: 'block',
+            marginTop: '0.5rem',
+            marginBottom: '0.5rem',
+          }}>localStorage.removeItem('carreiro-admin-password')</code></li>
+          <li>Tecle <strong>Enter</strong></li>
+          <li>Tecle <strong>F5</strong> para recarregar a página</li>
+          <li>A senha voltará para: <strong>1234</strong></li>
+        </ol>
+      </div>
+    </div>
+  )
 
       default:
         return null
