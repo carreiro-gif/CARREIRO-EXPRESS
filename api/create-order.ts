@@ -1,17 +1,14 @@
 // api/create-order.ts
-// Serverless Function para criar pedido na Saipos
+// Criar pedido Saipos - SANDBOX REAL
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-// Importar função de token (mesma pasta)
+// Função interna de token (igual ao token.ts)
 async function getToken(): Promise<string> {
-  const now = Date.now()
-  
-  // Mesmo cache do token.ts
   const { SAIPOS_ID_PARTNER, SAIPOS_SECRET, SAIPOS_BASE_URL } = process.env
 
   if (!SAIPOS_ID_PARTNER || !SAIPOS_SECRET || !SAIPOS_BASE_URL) {
-    throw new Error('Credenciais Saipos não configuradas')
+    throw new Error('Credenciais não configuradas')
   }
 
   const response = await fetch(`${SAIPOS_BASE_URL}/auth`, {
@@ -24,7 +21,8 @@ async function getToken(): Promise<string> {
   })
 
   if (!response.ok) {
-    throw new Error(`Auth falhou: ${response.status}`)
+    const text = await response.text()
+    throw new Error(`Auth falhou: ${response.status} - ${text}`)
   }
 
   const data = await response.json()
@@ -73,7 +71,10 @@ interface SaiposOrderPayload {
   }[]
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse
+) {
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -81,14 +82,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+    return res.status(405).json({ 
+      success: false,
+      error: 'Method not allowed' 
+    })
   }
 
   try {
     const { SAIPOS_COD_STORE, SAIPOS_BASE_URL } = process.env
 
     if (!SAIPOS_COD_STORE || !SAIPOS_BASE_URL) {
-      throw new Error('Configuração Saipos incompleta')
+      throw new Error('Configuração incompleta')
     }
 
     // Validar body
@@ -96,29 +100,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!body.items || !Array.isArray(body.items) || body.items.length === 0) {
       return res.status(400).json({ 
-        success: false, 
+        success: false,
         error: 'Pedido deve ter pelo menos 1 item' 
       })
     }
 
     if (!body.total_amount || body.total_amount <= 0) {
       return res.status(400).json({ 
-        success: false, 
-        error: 'Total do pedido inválido' 
+        success: false,
+        error: 'Total inválido' 
       })
     }
 
     // Obter token
-    console.log('🔐 Obtendo token...')
+    console.log('🔐 [SAIPOS] Obtendo token...')
     const token = await getToken()
 
     // Gerar IDs únicos
     const timestamp = Date.now()
     const orderId = `TOTEM-${timestamp}`
-    const displayId = String(timestamp).slice(-6) // últimos 6 dígitos
+    const displayId = String(timestamp).slice(-6)
 
-    // Montar payload Saipos
-    const saiposPayload: SaiposOrderPayload = {
+    // Montar payload
+    const payload: SaiposOrderPayload = {
       order_id: orderId,
       display_id: displayId,
       cod_store: SAIPOS_COD_STORE,
@@ -146,39 +150,56 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })),
     }
 
-    console.log('📤 Enviando pedido para Saipos:', {
+    console.log('📤 [SAIPOS] POST /order', {
       order_id: orderId,
       display_id: displayId,
+      cod_store: SAIPOS_COD_STORE,
       items: body.items.length,
       total: body.total_amount,
+      url: `${SAIPOS_BASE_URL}/order`,
     })
 
     // Enviar para Saipos
-    const response = await fetch(`${SAIPOS_BASE_URL}/order`, {
+    const orderUrl = `${SAIPOS_BASE_URL}/order`
+    
+    const response = await fetch(orderUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(saiposPayload),
+      body: JSON.stringify(payload),
     })
 
-    const responseData = await response.json()
+    const responseText = await response.text()
+
+    console.log('📥 [SAIPOS] Order response', {
+      status: response.status,
+      statusText: response.statusText,
+      body: responseText.substring(0, 500),
+    })
 
     if (!response.ok) {
-      console.error('❌ Erro Saipos:', {
+      console.error('❌ [SAIPOS] Erro ao criar pedido:', {
         status: response.status,
-        data: responseData,
+        response: responseText,
+        payload: JSON.stringify(payload, null, 2),
       })
 
       return res.status(response.status).json({
         success: false,
-        error: 'Erro ao processar pedido. Tente novamente.',
-        details: responseData,
+        error: 'Erro ao processar pedido',
+        details: responseText,
       })
     }
 
-    console.log('✅ Pedido criado com sucesso:', orderId)
+    const responseData = JSON.parse(responseText)
+
+    console.log('✅ [SAIPOS] Pedido criado com sucesso:', {
+      order_id: orderId,
+      display_id: displayId,
+      saipos_id: responseData.id || 'N/A',
+    })
 
     return res.status(200).json({
       success: true,
@@ -188,11 +209,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
   } catch (error: any) {
-    console.error('❌ Erro ao criar pedido:', error)
+    console.error('❌ [HANDLER] Erro ao criar pedido:', {
+      message: error.message,
+      stack: error.stack?.substring(0, 500),
+    })
 
     return res.status(500).json({
       success: false,
-      error: 'Erro interno ao processar pedido. Tente novamente.',
+      error: 'Erro interno ao processar pedido',
       message: error.message,
     })
   }
