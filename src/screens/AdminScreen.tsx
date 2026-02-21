@@ -394,7 +394,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onClose }) => {
               ))}
             </div>
           </div>
-        )typescript
+        )
 case 'senha':
   return (
     <div style={styles.scrollableContent}>
