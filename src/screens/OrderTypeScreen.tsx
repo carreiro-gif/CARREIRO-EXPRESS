@@ -1,102 +1,57 @@
 // src/screens/OrderTypeScreen.tsx
+// Tela de seleção do tipo de pedido
 
-import React, { useState } from 'react'
-import { theme } from '../theme/theme'
-
-export type OrderType = 'dine-in' | 'takeout'
+import React from 'react'
+import { useOrder } from '../context/OrderContext'
 
 interface OrderTypeScreenProps {
-  onSelectType: (type: OrderType) => void
+  onSelect: (type: 'dine-in' | 'takeaway') => void
   onBack: () => void
 }
 
-const OrderTypeScreen: React.FC<OrderTypeScreenProps> = ({ onSelectType, onBack }) => {
-  const [selected, setSelected] = useState<OrderType | null>(null)
+const OrderTypeScreen: React.FC<OrderTypeScreenProps> = ({ onSelect, onBack }) => {
+  const { setOrderType } = useOrder()
 
-  const handleSelect = (type: OrderType) => {
-    setSelected(type)
-    // Pequeno delay para feedback visual
-    setTimeout(() => {
-      onSelectType(type)
-    }, 300)
+  const handleSelect = (type: 'dine-in' | 'takeaway') => {
+    setOrderType(type)
+    onSelect(type)
   }
 
   return (
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <button style={styles.backButton} onClick={onBack}>
+        <button onClick={onBack} style={styles.backButton}>
           ← Voltar
         </button>
+        <h1 style={styles.title}>Como você vai comer?</h1>
       </div>
 
-      {/* Conteúdo principal */}
-      <div style={styles.content}>
-        <h1 style={styles.title}>Como você vai consumir?</h1>
-        <p style={styles.subtitle}>Escolha uma opção para continuar</p>
+      {/* Options */}
+      <div style={styles.options}>
+        {/* Para Viagem */}
+        <button
+          onClick={() => handleSelect('takeaway')}
+          style={styles.optionButton}
+        >
+          <div style={styles.optionIcon}>🛍️</div>
+          <div style={styles.optionTitle}>Para Viagem</div>
+          <div style={styles.optionDescription}>
+            Retire seu pedido e leve para onde quiser
+          </div>
+        </button>
 
-        {/* Opções */}
-        <div style={styles.optionsGrid}>
-          {/* Para Viagem */}
-          <button
-            style={{
-              ...styles.optionButton,
-              backgroundColor: selected === 'takeout'
-                ? theme.colors.primary.main
-                : theme.colors.background.paper,
-              transform: selected === 'takeout' ? 'scale(0.98)' : 'scale(1)',
-            }}
-            onClick={() => handleSelect('takeout')}
-          >
-            <div style={styles.optionIcon}>🏍️</div>
-            <h2 style={{
-              ...styles.optionTitle,
-              color: selected === 'takeout'
-                ? theme.colors.neutral.white
-                : theme.colors.neutral.gray[900],
-            }}>
-              Para Viagem
-            </h2>
-            <p style={{
-              ...styles.optionDescription,
-              color: selected === 'takeout'
-                ? theme.colors.neutral.white
-                : theme.colors.neutral.gray[600],
-            }}>
-              Levar para consumir em outro local
-            </p>
-          </button>
-
-          {/* Comer Aqui */}
-          <button
-            style={{
-              ...styles.optionButton,
-              backgroundColor: selected === 'dine-in'
-                ? theme.colors.primary.main
-                : theme.colors.background.paper,
-              transform: selected === 'dine-in' ? 'scale(0.98)' : 'scale(1)',
-            }}
-            onClick={() => handleSelect('dine-in')}
-          >
-            <div style={styles.optionIcon}>🍽️</div>
-            <h2 style={{
-              ...styles.optionTitle,
-              color: selected === 'dine-in'
-                ? theme.colors.neutral.white
-                : theme.colors.neutral.gray[900],
-            }}>
-              Comer Aqui
-            </h2>
-            <p style={{
-              ...styles.optionDescription,
-              color: selected === 'dine-in'
-                ? theme.colors.neutral.white
-                : theme.colors.neutral.gray[600],
-            }}>
-              Consumir no local
-            </p>
-          </button>
-        </div>
+        {/* Comer Aqui */}
+        <button
+          onClick={() => handleSelect('dine-in')}
+          style={styles.optionButton}
+        >
+          <div style={styles.optionIcon}>🍽️</div>
+          <div style={styles.optionTitle}>Comer Aqui</div>
+          <div style={styles.optionDescription}>
+            Aproveite seu lanche no nosso espaço
+          </div>
+        </button>
       </div>
     </div>
   )
@@ -106,93 +61,95 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     minHeight: '100vh',
-    backgroundColor: theme.colors.background.default,
+    backgroundColor: '#F9FAFB',
     display: 'flex',
     flexDirection: 'column',
   },
 
   header: {
-    padding: theme.spacing.xl,
-    backgroundColor: theme.colors.background.paper,
-    boxShadow: theme.shadows.sm,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1.5rem',
+    padding: '2rem',
+    backgroundColor: '#FFF',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
   },
 
   backButton: {
-    padding: `${theme.spacing.md} ${theme.spacing.xl}`,
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    backgroundColor: theme.colors.neutral.gray[100],
+    padding: '0.75rem 1.5rem',
+    fontSize: '1.125rem',
+    fontWeight: 600,
+    backgroundColor: '#F3F4F6',
     border: 'none',
-    borderRadius: theme.borderRadius.md,
+    borderRadius: '0.5rem',
     cursor: 'pointer',
-    transition: `all ${theme.transitions.fast}`,
-  },
-
-  content: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: theme.spacing['3xl'],
-    gap: theme.spacing.xl,
+    transition: 'all 150ms',
   },
 
   title: {
-    fontSize: theme.typography.fontSize['4xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.neutral.gray[900],
-    textAlign: 'center',
+    fontSize: '1.875rem',
+    fontWeight: 700,
     margin: 0,
+    color: '#111827',
   },
 
-  subtitle: {
-    fontSize: theme.typography.fontSize.xl,
-    color: theme.colors.neutral.gray[600],
-    textAlign: 'center',
-    margin: 0,
-  },
-
-  optionsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-    gap: theme.spacing['2xl'],
+  options: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '2rem',
+    padding: '2rem',
+    maxWidth: '1200px',
+    margin: '0 auto',
     width: '100%',
-    maxWidth: '800px',
-    marginTop: theme.spacing.xl,
   },
 
   optionButton: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.lg,
-    padding: theme.spacing['3xl'],
-    minHeight: '320px',
-    border: `3px solid ${theme.colors.neutral.gray[200]}`,
-    borderRadius: theme.borderRadius.xl,
+    flex: 1,
+    maxWidth: '400px',
+    padding: '3rem 2rem',
+    backgroundColor: '#FFF',
+    border: '3px solid #E5E7EB',
+    borderRadius: '1.5rem',
     cursor: 'pointer',
-    transition: `all ${theme.transitions.fast}`,
-    boxShadow: theme.shadows.lg,
+    transition: 'all 200ms',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
   },
 
   optionIcon: {
-    fontSize: '96px',
-    lineHeight: 1,
+    fontSize: '5rem',
+    marginBottom: '1.5rem',
   },
 
   optionTitle: {
-    fontSize: theme.typography.fontSize['3xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    margin: 0,
+    fontSize: '2rem',
+    fontWeight: 700,
+    color: '#111827',
+    marginBottom: '0.75rem',
   },
 
   optionDescription: {
-    fontSize: theme.typography.fontSize.lg,
-    textAlign: 'center',
-    margin: 0,
+    fontSize: '1.125rem',
+    color: '#6B7280',
+    lineHeight: 1.5,
   },
+}
+
+// Adicionar hover effect via CSS-in-JS inline
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style')
+  style.textContent = `
+    [style*="optionButton"]:hover {
+      border-color: #E11D48 !important;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(225, 29, 72, 0.2) !important;
+    }
+    [style*="backButton"]:hover {
+      background-color: #E5E7EB !important;
+    }
+  `
+  document.head.appendChild(style)
 }
 
 export default OrderTypeScreen
