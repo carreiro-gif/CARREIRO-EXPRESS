@@ -1,200 +1,66 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useOrder } from '../context/OrderContext';
-import { Brendi } from '../services/brendi';
-import { Category, Product } from '../types';
-import Header from '../components/Header';
-import ProductModal from '../components/ProductModal';
+// src/screens/MenuScreen.tsx - VERSÃO MINIMALISTA
+
+import React, { useState } from 'react'
+import { useOrder } from '../context/OrderContext'
 
 interface MenuScreenProps {
-  onBack: () => void;
-  onCheckout: () => void;
+  onBack: () => void
+  onCheckout: () => void
 }
 
+const PRODUCTS = [
+  { id: '1', name: 'X-Bacon', price: 25.90, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop' },
+  { id: '2', name: 'X-Salada', price: 22.90, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop' },
+  { id: '3', name: 'X-Egg', price: 24.90, image: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&h=300&fit=crop' },
+  { id: '4', name: 'Batata Frita', price: 12.00, image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&h=300&fit=crop' },
+  { id: '5', name: 'Refrigerante', price: 5.00, image: 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400&h=300&fit=crop' },
+]
+
 const MenuScreen: React.FC<MenuScreenProps> = ({ onBack, onCheckout }) => {
-  const { cart, addToCart, removeFromCart, updateQuantity, totalAmount } = useOrder();
-
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadMenu() {
-      try {
-        const data = await Brendi.getMenu();
-        setCategories(data.categories);
-        setProducts(data.products);
-        if (data.categories.length > 0) {
-          setSelectedCategoryId(data.categories[0].id);
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadMenu();
-  }, []);
-
-  const filteredProducts = useMemo(() => {
-    return products.filter(p => p.categoryId === selectedCategoryId);
-  }, [products, selectedCategoryId]);
-
-  if (loading) {
-    return (
-      <div style={{
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 24,
-        fontWeight: 'bold'
-      }}>
-        Carregando menu...
-      </div>
-    );
-  }
+  const { cart, addToCart, cartTotal, cartCount } = useOrder()
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header onHome={onBack} />
-
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-
-        {/* CATEGORIAS */}
-        <aside style={{
-          width: 160,
-          backgroundColor: '#fff',
-          borderRight: '1px solid #ddd',
-          overflowY: 'auto'
-        }}>
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategoryId(cat.id)}
-              style={{
-                width: '100%',
-                padding: 16,
-                cursor: 'pointer',
-                backgroundColor: selectedCategoryId === cat.id ? '#eee' : '#fff',
-                border: 'none',
-                borderBottom: '1px solid #ddd',
-                fontWeight: 'bold'
-              }}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </aside>
-
-        {/* PRODUTOS */}
-        <main style={{
-          flex: 1,
-          padding: 24,
-          overflowY: 'auto',
-          backgroundColor: '#f5f5f5'
-        }}>
-          <h2 style={{ marginBottom: 24 }}>
-            {categories.find(c => c.id === selectedCategoryId)?.name}
-          </h2>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-            gap: 24
-          }}>
-            {filteredProducts.map(product => (
-              <div
-                key={product.id}
-                onClick={() => setSelectedProduct(product)}
-                style={{
-                  backgroundColor: '#fff',
-                  padding: 16,
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  border: '1px solid #ddd'
-                }}
-              >
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  style={{
-                    width: '100%',
-                    height: 140,
-                    objectFit: 'cover',
-                    borderRadius: 8,
-                    marginBottom: 12
-                  }}
-                />
-                <strong>{product.name}</strong>
-                <p style={{ fontSize: 14, color: '#666' }}>{product.description}</p>
-                <div style={{ marginTop: 8, fontWeight: 'bold' }}>
-                  R$ {product.price.toFixed(2)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </main>
-
-        {/* CARRINHO */}
-        <aside style={{
-          width: 360,
-          backgroundColor: '#fff',
-          borderLeft: '1px solid #ddd',
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          <div style={{ padding: 24, flex: 1, overflowY: 'auto' }}>
-            <h3>Pedido</h3>
-
-            {cart.map(item => (
-              <div key={item.id} style={{
-                borderBottom: '1px solid #ddd',
-                padding: '12px 0'
-              }}>
-                <strong>{item.name}</strong>
-                <div>
-                  <button onClick={() => updateQuantity(item.id, -1)}>-</button>
-                  <span style={{ margin: '0 8px' }}>{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, 1)}>+</button>
-                </div>
-                <div>R$ {item.totalPrice.toFixed(2)}</div>
-                <button onClick={() => removeFromCart(item.id)}>Remover</button>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ padding: 24, borderTop: '1px solid #ddd' }}>
-            <div style={{ fontWeight: 'bold', marginBottom: 16 }}>
-              Total: R$ {totalAmount.toFixed(2)}
-            </div>
-            <button
-              onClick={onCheckout}
-              disabled={cart.length === 0}
-              style={{
-                width: '100%',
-                padding: 16,
-                fontSize: 18,
-                cursor: cart.length === 0 ? 'not-allowed' : 'pointer'
-              }}
-            >
-              Continuar
-            </button>
-          </div>
-        </aside>
+    <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#F9FAFB', paddingBottom: '120px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '2rem', backgroundColor: '#FFF', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+        <button onClick={onBack} style={{ padding: '0.75rem 1.5rem', fontSize: '1.125rem', fontWeight: 600, backgroundColor: '#F3F4F6', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>
+          ← Voltar
+        </button>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, margin: 0 }}>Cardápio</h1>
       </div>
 
-      {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-          onConfirm={(qty, mods, obs) => {
-            addToCart(selectedProduct, qty, mods, obs);
-            setSelectedProduct(null);
-          }}
-        />
+      {/* Produtos */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+        {PRODUCTS.map(product => (
+          <div key={product.id} style={{ backgroundColor: '#FFF', borderRadius: '0.75rem', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <img src={product.image} alt={product.name} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+            <div style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, marginBottom: '1rem' }}>{product.name}</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#E11D48' }}>R$ {product.price.toFixed(2)}</span>
+                <button onClick={() => addToCart({ id: product.id, name: product.name, price: product.price })} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: 600, backgroundColor: '#E11D48', color: '#FFF', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>
+                  + Adicionar
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Carrinho Fixo */}
+      {cartCount > 0 && (
+        <div onClick={onCheckout} style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#E11D48', padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', boxShadow: '0 -4px 6px rgba(0,0,0,0.1)', zIndex: 100 }}>
+          <div>
+            <div style={{ fontSize: '1.125rem', color: '#FFF', fontWeight: 500 }}>🛒 {cartCount} itens</div>
+            <div style={{ fontSize: '2rem', color: '#FFF', fontWeight: 800 }}>R$ {cartTotal.toFixed(2)}</div>
+          </div>
+          <button style={{ padding: '1rem 2rem', fontSize: '1.25rem', fontWeight: 700, backgroundColor: '#FFF', color: '#E11D48', border: 'none', borderRadius: '0.75rem', cursor: 'pointer' }}>
+            IR PARA PAGAMENTO →
+          </button>
+        </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default MenuScreen;
+export default MenuScreen
