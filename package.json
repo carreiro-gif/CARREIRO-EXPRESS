@@ -24,3 +24,16 @@
     "vite": "^6.2.0"
   }
 }
+// INSTRUÇÕES PARA ATUALIZAR package.json
+
+// ADICIONE esta linha na seção "devDependencies":
+
+{
+  "devDependencies": {
+    "@vercel/node": "^3.0.0",
+    // ... suas outras dependências existentes
+  }
+}
+
+// Depois rode:
+// npm install
