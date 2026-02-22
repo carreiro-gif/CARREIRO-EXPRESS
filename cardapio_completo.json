@@ -1,0 +1,383 @@
+{
+  "categories": [
+    {
+      "id": "cat-1",
+      "name": "🔝BOM E BARATO💰",
+      "emoji": "💰",
+      "active": true,
+      "order": 1
+    },
+    {
+      "id": "cat-2",
+      "name": "Promoções Arretadas!",
+      "emoji": "🎉",
+      "active": true,
+      "order": 2
+    },
+    {
+      "id": "cat-3",
+      "name": "Mega Oferta (Combo 1 Pessoa)",
+      "emoji": "🍔",
+      "active": true,
+      "order": 3
+    },
+    {
+      "id": "cat-4",
+      "name": "🍔 Hambúrgueres",
+      "emoji": "🍔",
+      "active": true,
+      "order": 4
+    },
+    {
+      "id": "cat-5",
+      "name": "Acompanhamentos",
+      "emoji": "🍟",
+      "active": true,
+      "order": 5
+    },
+    {
+      "id": "cat-6",
+      "name": "Bebidas",
+      "emoji": "🥤",
+      "active": true,
+      "order": 6
+    }
+  ],
+  "products": [
+    {
+      "id": "prod-1",
+      "name": "CARREIRINHO",
+      "description": "Uma carne suculenta, recheada com queijo cheddar, cebola, picles fresquinhos, ketchup e mostarda, tudo envolto em um pão com gergelim.",
+      "category_id": "cat-1",
+      "integration_code": "23373784",
+      "price": 11.9,
+      "discount_enabled": true,
+      "discount_value": 16.81,
+      "discount_price": 9.9,
+      "portion_size": "unidade",
+      "serves_up_to": "1 pessoa",
+      "status": "active",
+      "image_url": "",
+      "featured": true,
+      "allow_share": true,
+      "mandatory_scheduling": false,
+      "complements": [
+        {
+          "id": "comp-1-1",
+          "name": "🧀🍗 GOSTARIA DE ADICIONAR ALGO?",
+          "emoji": "🧀",
+          "type": "multiple",
+          "required": false,
+          "min_quantity": 0,
+          "max_quantity": 7,
+          "status": "active",
+          "order": 1,
+          "options": [
+            {
+              "id": "opt-1-1",
+              "name": "Adicionar Cheddar",
+              "price": 2.0,
+              "integration_code": "23373754.17906868",
+              "status": "active",
+              "order": 1
+            },
+            {
+              "id": "opt-1-2",
+              "name": "Adicionar Bacon",
+              "price": 3.0,
+              "integration_code": "23373705.17906867",
+              "status": "active",
+              "order": 2
+            },
+            {
+              "id": "opt-1-3",
+              "name": "Adicionar Queijo",
+              "price": 3.0,
+              "integration_code": "QUEIJO",
+              "status": "active",
+              "order": 3
+            },
+            {
+              "id": "opt-1-4",
+              "name": "Adicionar Ovo",
+              "price": 2.0,
+              "integration_code": "23373928.17906903",
+              "status": "active",
+              "order": 4
+            }
+          ]
+        }
+      ],
+      "createdAt": "2024-02-20T00:00:00.000Z",
+      "updatedAt": "2024-02-20T00:00:00.000Z"
+    },
+    {
+      "id": "prod-2",
+      "name": "Duplo Carreirinho",
+      "description": "Duas carnes suculentas, recheadas com queijo cheddar, cebola, picles fresquinhos, ketchup e mostarda, tudo envolto em um pão com gergelim.",
+      "category_id": "cat-1",
+      "integration_code": "23373904",
+      "price": 13.9,
+      "discount_enabled": true,
+      "discount_value": 14.39,
+      "discount_price": 11.9,
+      "portion_size": "unidade",
+      "serves_up_to": "1 pessoa",
+      "status": "active",
+      "image_url": "",
+      "featured": false,
+      "allow_share": true,
+      "mandatory_scheduling": false,
+      "complements": [
+        {
+          "id": "comp-2-1",
+          "name": "🧀🍗 GOSTARIA DE ADICIONAR ALGO?",
+          "emoji": "🧀",
+          "type": "multiple",
+          "required": false,
+          "min_quantity": 0,
+          "max_quantity": 7,
+          "status": "active",
+          "order": 1,
+          "options": [
+            {
+              "id": "opt-2-1",
+              "name": "Adicionar Cheddar",
+              "price": 2.0,
+              "integration_code": "23373754.17906868",
+              "status": "active",
+              "order": 1
+            },
+            {
+              "id": "opt-2-2",
+              "name": "Adicionar Bacon",
+              "price": 3.0,
+              "integration_code": "23373705.17906867",
+              "status": "active",
+              "order": 2
+            },
+            {
+              "id": "opt-2-3",
+              "name": "Adicionar Queijo",
+              "price": 3.0,
+              "integration_code": "QUEIJO",
+              "status": "active",
+              "order": 3
+            },
+            {
+              "id": "opt-2-4",
+              "name": "Adicionar Ovo",
+              "price": 2.0,
+              "integration_code": "23373928.17906903",
+              "status": "active",
+              "order": 4
+            }
+          ]
+        }
+      ],
+      "createdAt": "2024-02-20T00:00:00.000Z",
+      "updatedAt": "2024-02-20T00:00:00.000Z"
+    },
+    {
+      "id": "prod-3",
+      "name": "Big Carreiro",
+      "description": "Duas carnes suculentas com queijo derretido, alface americana, cebola, picles, maionese temperada e nosso molho especial da casa, tudo abraçado por um pão com gergelim.",
+      "category_id": "cat-1",
+      "integration_code": "23373837",
+      "price": 14.9,
+      "discount_enabled": true,
+      "discount_value": 13.42,
+      "discount_price": 12.9,
+      "portion_size": "unidade",
+      "serves_up_to": "1 pessoa",
+      "status": "active",
+      "image_url": "",
+      "featured": false,
+      "allow_share": true,
+      "mandatory_scheduling": false,
+      "complements": [
+        {
+          "id": "comp-3-1",
+          "name": "🧀🍗 GOSTARIA DE ADICIONAR ALGO?",
+          "emoji": "🧀",
+          "type": "multiple",
+          "required": false,
+          "min_quantity": 0,
+          "max_quantity": 7,
+          "status": "active",
+          "order": 1,
+          "options": [
+            {
+              "id": "opt-3-1",
+              "name": "Adicionar Cheddar",
+              "price": 2.0,
+              "integration_code": "23373754.17906868",
+              "status": "active",
+              "order": 1
+            },
+            {
+              "id": "opt-3-2",
+              "name": "Adicionar Bacon",
+              "price": 3.0,
+              "integration_code": "23373705.17906867",
+              "status": "active",
+              "order": 2
+            },
+            {
+              "id": "opt-3-3",
+              "name": "Adicionar Queijo",
+              "price": 3.0,
+              "integration_code": "QUEIJO",
+              "status": "active",
+              "order": 3
+            },
+            {
+              "id": "opt-3-4",
+              "name": "Adicionar Ovo",
+              "price": 2.0,
+              "integration_code": "23373928.17906903",
+              "status": "active",
+              "order": 4
+            }
+          ]
+        }
+      ],
+      "createdAt": "2024-02-20T00:00:00.000Z",
+      "updatedAt": "2024-02-20T00:00:00.000Z"
+    },
+    {
+      "id": "prod-4",
+      "name": "X-Bacon",
+      "description": "Uma carne suculenta, queijo derretido, bacon, alface fresquinha, tomate, cebola crocante, batata palha, maionese temperada da casa e nosso molho especial, tudo no macio pão brioche",
+      "category_id": "cat-4",
+      "integration_code": "23373895",
+      "price": 14.9,
+      "discount_enabled": false,
+      "discount_value": 0,
+      "discount_price": 14.9,
+      "portion_size": "unidade",
+      "serves_up_to": "1 pessoa",
+      "status": "active",
+      "image_url": "",
+      "featured": false,
+      "allow_share": true,
+      "mandatory_scheduling": false,
+      "complements": [
+        {
+          "id": "comp-4-1",
+          "name": "🧀🍗 GOSTARIA DE ADICIONAR ALGO?",
+          "emoji": "🧀",
+          "type": "multiple",
+          "required": false,
+          "min_quantity": 0,
+          "max_quantity": 7,
+          "status": "active",
+          "order": 1,
+          "options": [
+            {
+              "id": "opt-4-1",
+              "name": "Adicionar Cheddar",
+              "price": 2.0,
+              "integration_code": "23373754.17906868",
+              "status": "active",
+              "order": 1
+            },
+            {
+              "id": "opt-4-2",
+              "name": "Adicionar Bacon",
+              "price": 3.0,
+              "integration_code": "23373705.17906867",
+              "status": "active",
+              "order": 2
+            },
+            {
+              "id": "opt-4-3",
+              "name": "Adicionar Queijo",
+              "price": 3.0,
+              "integration_code": "QUEIJO",
+              "status": "active",
+              "order": 3
+            },
+            {
+              "id": "opt-4-4",
+              "name": "Adicionar Ovo",
+              "price": 2.0,
+              "integration_code": "23373928.17906903",
+              "status": "active",
+              "order": 4
+            }
+          ]
+        }
+      ],
+      "createdAt": "2024-02-20T00:00:00.000Z",
+      "updatedAt": "2024-02-20T00:00:00.000Z"
+    },
+    {
+      "id": "prod-5",
+      "name": "X-Tudo",
+      "description": "Uma carne suculenta, queijo derretido, ovo, bacon, alface fresquinha, tomate, cebola crocante, batata palha, maionese temperada da casa e nosso molho especial, tudo no macio pão brioche",
+      "category_id": "cat-4",
+      "integration_code": "23373893",
+      "price": 15.9,
+      "discount_enabled": false,
+      "discount_value": 0,
+      "discount_price": 15.9,
+      "portion_size": "unidade",
+      "serves_up_to": "1 pessoa",
+      "status": "active",
+      "image_url": "",
+      "featured": false,
+      "allow_share": true,
+      "mandatory_scheduling": false,
+      "complements": [
+        {
+          "id": "comp-5-1",
+          "name": "🧀🍗 GOSTARIA DE ADICIONAR ALGO?",
+          "emoji": "🧀",
+          "type": "multiple",
+          "required": false,
+          "min_quantity": 0,
+          "max_quantity": 7,
+          "status": "active",
+          "order": 1,
+          "options": [
+            {
+              "id": "opt-5-1",
+              "name": "Adicionar Cheddar",
+              "price": 2.0,
+              "integration_code": "23373754.17906868",
+              "status": "active",
+              "order": 1
+            },
+            {
+              "id": "opt-5-2",
+              "name": "Adicionar Bacon",
+              "price": 3.0,
+              "integration_code": "23373705.17906867",
+              "status": "active",
+              "order": 2
+            },
+            {
+              "id": "opt-5-3",
+              "name": "Adicionar Queijo",
+              "price": 3.0,
+              "integration_code": "QUEIJO",
+              "status": "active",
+              "order": 3
+            },
+            {
+              "id": "opt-5-4",
+              "name": "Adicionar Ovo",
+              "price": 2.0,
+              "integration_code": "23373928.17906903",
+              "status": "active",
+              "order": 4
+            }
+          ]
+        }
+      ],
+      "createdAt": "2024-02-20T00:00:00.000Z",
+      "updatedAt": "2024-02-20T00:00:00.000Z"
+    }
+  ]
+}
