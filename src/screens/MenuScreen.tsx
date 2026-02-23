@@ -1,5 +1,5 @@
-// src/screens/MenuScreen-CATEGORIAS.tsx
-// Menu com filtro de categorias e busca
+// src/screens/MenuScreen.tsx
+// CORRIGIDO - bug cartCount
 
 import React, { useState } from 'react'
 import { useOrder } from '../context/OrderContext'
@@ -11,11 +11,14 @@ interface MenuScreenProps {
 }
 
 const MenuScreen: React.FC<MenuScreenProps> = ({ onBack, onCheckout }) => {
-  const { cart, addToCart, cartTotal, cartCount } = useOrder()
+  const { cart, addToCart, cartTotal } = useOrder()
   const { products, categories, getActiveProducts } = useProducts()
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+
+  // ⭐ FIX: Calcular cartCount
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   const activeProducts = getActiveProducts()
   const activeCategories = categories.filter(c => c.active)
@@ -30,7 +33,7 @@ const MenuScreen: React.FC<MenuScreenProps> = ({ onBack, onCheckout }) => {
   })
 
   return (
-    <div style={styles.container}>
+    <div style={{...styles.container, paddingBottom: cartCount > 0 ? '120px' : '2rem'}}>
       {/* Header */}
       <div style={styles.header}>
         <button onClick={onBack} style={styles.backButton}>
@@ -167,7 +170,6 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     minHeight: '100vh',
     backgroundColor: '#F9FAFB',
-    paddingBottom: cartCount > 0 ? '120px' : '2rem',
   },
 
   header: {
@@ -413,24 +415,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     cursor: 'pointer',
   },
-}
-
-// Hover effects
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style')
-  style.textContent = `
-    [style*="productCard"]:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
-    }
-    [style*="addButton"]:hover {
-      background-color: #BE123C !important;
-    }
-    [style*="categoryChip"]:hover:not([style*="categoryChipActive"]) {
-      background-color: #E5E7EB !important;
-    }
-  `
-  document.head.appendChild(style)
 }
 
 export default MenuScreen
