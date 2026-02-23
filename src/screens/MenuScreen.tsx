@@ -1,420 +1,66 @@
-// src/screens/MenuScreen.tsx
-// CORRIGIDO - bug cartCount
+// src/screens/MenuScreen.tsx - VERSÃO MINIMALISTA
 
 import React, { useState } from 'react'
 import { useOrder } from '../context/OrderContext'
-import { useProducts } from '../context/ProductsContext'
 
 interface MenuScreenProps {
   onBack: () => void
   onCheckout: () => void
 }
 
+const PRODUCTS = [
+  { id: '1', name: 'X-Bacon', price: 25.90, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop' },
+  { id: '2', name: 'X-Salada', price: 22.90, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop' },
+  { id: '3', name: 'X-Egg', price: 24.90, image: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&h=300&fit=crop' },
+  { id: '4', name: 'Batata Frita', price: 12.00, image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&h=300&fit=crop' },
+  { id: '5', name: 'Refrigerante', price: 5.00, image: 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400&h=300&fit=crop' },
+]
+
 const MenuScreen: React.FC<MenuScreenProps> = ({ onBack, onCheckout }) => {
-  const { cart, addToCart, cartTotal } = useOrder()
-  const { products, categories, getActiveProducts } = useProducts()
-  
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-
-  // ⭐ FIX: Calcular cartCount
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
-
-  const activeProducts = getActiveProducts()
-  const activeCategories = categories.filter(c => c.active)
-
-  // Filtrar produtos
-  const filteredProducts = activeProducts.filter(product => {
-    const matchesCategory = !selectedCategory || product.category_id === selectedCategory
-    const matchesSearch = !searchTerm || 
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
+  const { cart, addToCart, cartTotal, cartCount } = useOrder()
 
   return (
-    <div style={{...styles.container, paddingBottom: cartCount > 0 ? '120px' : '2rem'}}>
+    <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#F9FAFB', paddingBottom: '120px' }}>
       {/* Header */}
-      <div style={styles.header}>
-        <button onClick={onBack} style={styles.backButton}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '2rem', backgroundColor: '#FFF', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+        <button onClick={onBack} style={{ padding: '0.75rem 1.5rem', fontSize: '1.125rem', fontWeight: 600, backgroundColor: '#F3F4F6', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>
           ← Voltar
         </button>
-        <h1 style={styles.title}>Cardápio</h1>
-      </div>
-
-      {/* Busca */}
-      <div style={styles.searchContainer}>
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="🔍 Buscar produtos..."
-          style={styles.searchInput}
-        />
-      </div>
-
-      {/* Filtro de Categorias */}
-      <div style={styles.categoriesContainer}>
-        <button
-          onClick={() => setSelectedCategory(null)}
-          style={{
-            ...styles.categoryChip,
-            ...(selectedCategory === null ? styles.categoryChipActive : {})
-          }}
-        >
-          Todos
-        </button>
-        {activeCategories.map(category => (
-          <button
-            key={category.id}
-            onClick={() => setSelectedCategory(category.id)}
-            style={{
-              ...styles.categoryChip,
-              ...(selectedCategory === category.id ? styles.categoryChipActive : {})
-            }}
-          >
-            {category.emoji} {category.name}
-          </button>
-        ))}
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, margin: 0 }}>Cardápio</h1>
       </div>
 
       {/* Produtos */}
-      <div style={styles.productsGrid}>
-        {filteredProducts.length === 0 ? (
-          <div style={styles.emptyState}>
-            <p style={styles.emptyText}>
-              {searchTerm ? 'Nenhum produto encontrado' : 'Nenhum produto disponível'}
-            </p>
-          </div>
-        ) : (
-          filteredProducts.map(product => (
-            <div key={product.id} style={styles.productCard}>
-              {product.image_url && (
-                <div style={styles.imageContainer}>
-                  <img 
-                    src={product.image_url} 
-                    alt={product.name} 
-                    style={styles.productImage}
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop'
-                    }}
-                  />
-                  {product.featured && (
-                    <div style={styles.badge}>⭐ Destaque</div>
-                  )}
-                  {product.discount_enabled && (
-                    <div style={styles.discountBadge}>
-                      -{product.discount_value.toFixed(0)}%
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <div style={styles.productInfo}>
-                <h3 style={styles.productName}>{product.name}</h3>
-                <p style={styles.productDescription}>{product.description}</p>
-                
-                <div style={styles.productFooter}>
-                  <div style={styles.priceContainer}>
-                    {product.discount_enabled ? (
-                      <>
-                        <span style={styles.originalPrice}>
-                          R$ {product.price.toFixed(2)}
-                        </span>
-                        <span style={styles.discountPrice}>
-                          R$ {product.discount_price.toFixed(2)}
-                        </span>
-                      </>
-                    ) : (
-                      <span style={styles.normalPrice}>
-                        R$ {product.price.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <button
-                    onClick={() => addToCart({
-                      id: product.id,
-                      name: product.name,
-                      price: product.discount_enabled ? product.discount_price : product.price
-                    })}
-                    style={styles.addButton}
-                  >
-                    + Adicionar
-                  </button>
-                </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+        {PRODUCTS.map(product => (
+          <div key={product.id} style={{ backgroundColor: '#FFF', borderRadius: '0.75rem', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <img src={product.image} alt={product.name} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+            <div style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, marginBottom: '1rem' }}>{product.name}</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#E11D48' }}>R$ {product.price.toFixed(2)}</span>
+                <button onClick={() => addToCart({ id: product.id, name: product.name, price: product.price })} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: 600, backgroundColor: '#E11D48', color: '#FFF', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>
+                  + Adicionar
+                </button>
               </div>
             </div>
-          ))
-        )}
+          </div>
+        ))}
       </div>
 
       {/* Carrinho Fixo */}
       {cartCount > 0 && (
-        <div onClick={onCheckout} style={styles.cart}>
-          <div style={styles.cartInfo}>
-            <div style={styles.cartCount}>🛒 {cartCount} {cartCount === 1 ? 'item' : 'itens'}</div>
-            <div style={styles.cartTotal}>R$ {cartTotal.toFixed(2)}</div>
+        <div onClick={onCheckout} style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#E11D48', padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', boxShadow: '0 -4px 6px rgba(0,0,0,0.1)', zIndex: 100 }}>
+          <div>
+            <div style={{ fontSize: '1.125rem', color: '#FFF', fontWeight: 500 }}>🛒 {cartCount} itens</div>
+            <div style={{ fontSize: '2rem', color: '#FFF', fontWeight: 800 }}>R$ {cartTotal.toFixed(2)}</div>
           </div>
-          <button style={styles.cartButton}>
-            Ver Carrinho →
+          <button style={{ padding: '1rem 2rem', fontSize: '1.25rem', fontWeight: 700, backgroundColor: '#FFF', color: '#E11D48', border: 'none', borderRadius: '0.75rem', cursor: 'pointer' }}>
+            IR PARA PAGAMENTO →
           </button>
         </div>
       )}
     </div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    width: '100%',
-    minHeight: '100vh',
-    backgroundColor: '#F9FAFB',
-  },
-
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1.5rem',
-    padding: '2rem',
-    backgroundColor: '#FFF',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-    position: 'sticky',
-    top: 0,
-    zIndex: 10,
-  },
-
-  backButton: {
-    padding: '0.75rem 1.5rem',
-    fontSize: '1.125rem',
-    fontWeight: 600,
-    backgroundColor: '#F3F4F6',
-    border: 'none',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-  },
-
-  title: {
-    fontSize: '1.875rem',
-    fontWeight: 700,
-    margin: 0,
-  },
-
-  searchContainer: {
-    padding: '1.5rem 2rem',
-    backgroundColor: '#FFF',
-    borderBottom: '1px solid #E5E7EB',
-  },
-
-  searchInput: {
-    width: '100%',
-    padding: '1rem',
-    fontSize: '1.125rem',
-    border: '2px solid #E5E7EB',
-    borderRadius: '0.75rem',
-    outline: 'none',
-  },
-
-  categoriesContainer: {
-    display: 'flex',
-    gap: '0.75rem',
-    padding: '1.5rem 2rem',
-    overflowX: 'auto',
-    backgroundColor: '#FFF',
-    borderBottom: '1px solid #E5E7EB',
-  },
-
-  categoryChip: {
-    padding: '0.75rem 1.5rem',
-    backgroundColor: '#F3F4F6',
-    border: '2px solid transparent',
-    borderRadius: '9999px',
-    fontSize: '1rem',
-    fontWeight: 600,
-    whiteSpace: 'nowrap',
-    cursor: 'pointer',
-    transition: 'all 150ms',
-  },
-
-  categoryChipActive: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#E11D48',
-    color: '#E11D48',
-  },
-
-  productsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap: '1.5rem',
-    padding: '2rem',
-    maxWidth: '1400px',
-    margin: '0 auto',
-  },
-
-  emptyState: {
-    gridColumn: '1 / -1',
-    textAlign: 'center',
-    padding: '4rem',
-  },
-
-  emptyText: {
-    fontSize: '1.25rem',
-    color: '#6B7280',
-  },
-
-  productCard: {
-    backgroundColor: '#FFF',
-    borderRadius: '1rem',
-    overflow: 'hidden',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.07)',
-    transition: 'transform 150ms, box-shadow 150ms',
-    cursor: 'pointer',
-  },
-
-  imageContainer: {
-    position: 'relative',
-    width: '100%',
-    height: '200px',
-    overflow: 'hidden',
-  },
-
-  productImage: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-
-  badge: {
-    position: 'absolute',
-    top: '1rem',
-    left: '1rem',
-    padding: '0.5rem 1rem',
-    backgroundColor: '#FBBF24',
-    color: '#78350F',
-    borderRadius: '9999px',
-    fontSize: '0.875rem',
-    fontWeight: 700,
-  },
-
-  discountBadge: {
-    position: 'absolute',
-    top: '1rem',
-    right: '1rem',
-    padding: '0.5rem 1rem',
-    backgroundColor: '#E11D48',
-    color: '#FFF',
-    borderRadius: '9999px',
-    fontSize: '0.875rem',
-    fontWeight: 700,
-  },
-
-  productInfo: {
-    padding: '1.5rem',
-  },
-
-  productName: {
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    marginBottom: '0.5rem',
-    color: '#111827',
-  },
-
-  productDescription: {
-    fontSize: '0.95rem',
-    color: '#6B7280',
-    marginBottom: '1rem',
-    lineHeight: 1.5,
-    display: '-webkit-box',
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: 'vertical',
-    overflow: 'hidden',
-  },
-
-  productFooter: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  priceContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-
-  originalPrice: {
-    fontSize: '0.875rem',
-    color: '#9CA3AF',
-    textDecoration: 'line-through',
-  },
-
-  discountPrice: {
-    fontSize: '1.5rem',
-    fontWeight: 800,
-    color: '#E11D48',
-  },
-
-  normalPrice: {
-    fontSize: '1.5rem',
-    fontWeight: 800,
-    color: '#111827',
-  },
-
-  addButton: {
-    padding: '0.75rem 1.5rem',
-    backgroundColor: '#E11D48',
-    color: '#FFF',
-    border: 'none',
-    borderRadius: '0.75rem',
-    fontSize: '1rem',
-    fontWeight: 700,
-    cursor: 'pointer',
-    transition: 'all 150ms',
-  },
-
-  cart: {
-    position: 'fixed',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#E11D48',
-    padding: '1.5rem 2rem',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    cursor: 'pointer',
-    boxShadow: '0 -4px 6px rgba(0,0,0,0.1)',
-    zIndex: 100,
-  },
-
-  cartInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-
-  cartCount: {
-    fontSize: '1rem',
-    color: '#FFF',
-    fontWeight: 500,
-  },
-
-  cartTotal: {
-    fontSize: '2rem',
-    color: '#FFF',
-    fontWeight: 800,
-  },
-
-  cartButton: {
-    padding: '1rem 2rem',
-    backgroundColor: '#FFF',
-    color: '#E11D48',
-    border: 'none',
-    borderRadius: '0.75rem',
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    cursor: 'pointer',
-  },
 }
 
 export default MenuScreen
