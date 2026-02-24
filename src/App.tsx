@@ -1,10 +1,10 @@
-// src/App.tsx - VERSÃO COMPLETA FUNCIONANDO
+// src/App.tsx
+// COM ProductsProvider
 
 import React, { useState } from 'react'
 import { ConfigProvider } from './context/ConfigContext'
 import { OrderProvider } from './context/OrderContext'
-
-// Screens
+import { ProductsProvider } from './context/ProductsContext'
 import HomeScreen from './screens/HomeScreen'
 import OrderTypeScreen from './screens/OrderTypeScreen'
 import MenuScreen from './screens/MenuScreen'
@@ -12,82 +12,92 @@ import PaymentScreen from './screens/PaymentScreen'
 import SuccessScreen from './screens/SuccessScreen'
 import AdminScreen from './screens/AdminScreen'
 
-type Screen = 'HOME' | 'ORDER_TYPE' | 'MENU' | 'PAYMENT' | 'SUCCESS' | 'ADMIN'
+type Screen = 'home' | 'order-type' | 'menu' | 'payment' | 'success' | 'admin'
 
-function AppContent() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('HOME')
-  const [lastOrderId, setLastOrderId] = useState<string>('')
+const App: React.FC = () => {
+  const [currentScreen, setCurrentScreen] = useState<Screen>('home')
+  const [orderType, setOrderType] = useState<'dine-in' | 'takeaway'>('takeaway')
+  const [orderId, setOrderId] = useState<string>('')
+
+  const handleAdminAccess = () => {
+    setCurrentScreen('admin')
+  }
+
+  const handleOrderTypeSelect = (type: 'dine-in' | 'takeaway') => {
+    setOrderType(type)
+    setCurrentScreen('menu')
+  }
+
+  const handlePaymentSuccess = (id: string) => {
+    setOrderId(id)
+    setCurrentScreen('success')
+  }
+
+  const handleBackToHome = () => {
+    setCurrentScreen('home')
+  }
 
   const renderScreen = () => {
     switch (currentScreen) {
-      case 'HOME':
+      case 'home':
         return (
           <HomeScreen
-            onStart={() => setCurrentScreen('ORDER_TYPE')}
-            onOpenConfig={() => setCurrentScreen('ADMIN')}
+            onStart={() => setCurrentScreen('order-type')}
+            onAdminAccess={handleAdminAccess}
           />
         )
 
-      case 'ORDER_TYPE':
+      case 'order-type':
         return (
           <OrderTypeScreen
-            onSelect={() => setCurrentScreen('MENU')}
-            onBack={() => setCurrentScreen('HOME')}
+            onSelect={handleOrderTypeSelect}
+            onBack={handleBackToHome}
           />
         )
 
-      case 'MENU':
+      case 'menu':
         return (
           <MenuScreen
-            onBack={() => setCurrentScreen('ORDER_TYPE')}
-            onCheckout={() => setCurrentScreen('PAYMENT')}
+            onBack={() => setCurrentScreen('order-type')}
+            onCheckout={() => setCurrentScreen('payment')}
           />
         )
 
-      case 'PAYMENT':
+      case 'payment':
         return (
           <PaymentScreen
-            onBack={() => setCurrentScreen('MENU')}
-            onSuccess={(orderId) => {
-              setLastOrderId(orderId)
-              setCurrentScreen('SUCCESS')
-            }}
+            onBack={() => setCurrentScreen('menu')}
+            onSuccess={handlePaymentSuccess}
           />
         )
 
-      case 'SUCCESS':
+      case 'success':
         return (
           <SuccessScreen
-            orderId={lastOrderId}
-            onNewOrder={() => setCurrentScreen('HOME')}
+            orderId={orderId}
+            orderType={orderType}
+            onBackToHome={handleBackToHome}
           />
         )
 
-      case 'ADMIN':
+      case 'admin':
         return (
           <AdminScreen
-            onClose={() => setCurrentScreen('HOME')}
+            onClose={handleBackToHome}
           />
         )
 
       default:
-        return (
-          <HomeScreen
-            onStart={() => setCurrentScreen('ORDER_TYPE')}
-            onOpenConfig={() => setCurrentScreen('ADMIN')}
-          />
-        )
+        return null
     }
   }
 
-  return <div style={{ width: '100%', minHeight: '100vh' }}>{renderScreen()}</div>
-}
-
-function App() {
   return (
     <ConfigProvider>
       <OrderProvider>
-        <AppContent />
+        <ProductsProvider>
+          {renderScreen()}
+        </ProductsProvider>
       </OrderProvider>
     </ConfigProvider>
   )
