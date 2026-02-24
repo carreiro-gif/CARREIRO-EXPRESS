@@ -1,5 +1,5 @@
 // src/screens/HomeScreen.tsx
-// COM CARROSSEL
+// CORRIGIDO - Verifica se carouselImages existe
 
 import React, { useState, useEffect } from 'react'
 import { useConfig } from '../context/ConfigContext'
@@ -19,18 +19,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onAdminAccess }) => {
 
   const ADMIN_PASSWORD = '1234'
 
+  // ⭐ FIX: Verificar se carouselImages existe e é array
+  const carouselImages = Array.isArray(config.carouselImages) ? config.carouselImages : []
+  const hasCarousel = config.carouselEnabled && carouselImages.length > 0
+
   // Carrossel automático
   useEffect(() => {
-    if (!config.carouselEnabled || config.carouselImages.length === 0) return
+    if (!hasCarousel) return
 
     const interval = setInterval(() => {
       setCurrentImageIndex(prev => 
-        (prev + 1) % config.carouselImages.length
+        (prev + 1) % carouselImages.length
       )
-    }, 5000) // Troca a cada 5 segundos
+    }, 5000)
 
     return () => clearInterval(interval)
-  }, [config.carouselEnabled, config.carouselImages.length])
+  }, [hasCarousel, carouselImages.length])
 
   const handleLogoClick = () => {
     const now = Date.now()
@@ -71,19 +75,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onAdminAccess }) => {
   return (
     <div style={styles.container}>
       {/* Carrossel de Imagens */}
-      {config.carouselEnabled && config.carouselImages.length > 0 && (
+      {hasCarousel && (
         <div style={styles.carouselContainer}>
           <img
-            src={config.carouselImages[currentImageIndex]}
+            src={carouselImages[currentImageIndex]}
             alt="Carousel"
             style={styles.carouselImage}
             onError={(e) => {
               e.currentTarget.src = 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=600&fit=crop'
             }}
           />
-          {config.carouselImages.length > 1 && (
+          {carouselImages.length > 1 && (
             <div style={styles.carouselDots}>
-              {config.carouselImages.map((_, idx) => (
+              {carouselImages.map((_, idx) => (
                 <div
                   key={idx}
                   style={{
