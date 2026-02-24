@@ -1,6 +1,7 @@
 // src/screens/AdminScreen.tsx
 // PASSO 3: Com aba Cardápio
 
+import ImageUploader from '../components/products/ImageUploader'
 import React, { useState } from 'react'
 import { useConfig } from '../context/ConfigContext'
 import { useProducts } from '../context/ProductsContext'
@@ -547,15 +548,14 @@ const ProductForm: React.FC<{
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>URL da Imagem</label>
-          <input
-            type="url"
-            value={formData.image_url}
-            onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-            style={styles.input}
-            placeholder="https://exemplo.com/imagem.jpg"
-          />
-        </div>
+  <ImageUploader
+    currentImageUrl={formData.image_url}
+    onImageChange={(imageData) =>
+      setFormData({ ...formData, image_url: imageData })
+    }
+    label="Imagem do Produto"
+  />
+</div>
       </div>
     </form>
   )
