@@ -1,36 +1,39 @@
-// src/screens/HomeScreen.tsx - VERSÃO FINAL
+// src/screens/HomeScreen.tsx
+// CORRIGIDO - Senha abre Admin
 
-import React, { useState, useRef } from 'react'
-import { Carousel } from '../components/Carousel/Carousel'
+import React, { useState } from 'react'
 import { useConfig } from '../context/ConfigContext'
 
 interface HomeScreenProps {
   onStart: () => void
-  onOpenConfig?: () => void
+  onAdminAccess: () => void
 }
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onAdminAccess }) => {
   const { config } = useConfig()
-  
-  const [clickCount, setClickCount] = useState(0)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [showPasswordInput, setShowPasswordInput] = useState(false)
   const [password, setPassword] = useState('')
-  const clickTimeout = useRef<NodeJS.Timeout | null>(null)
+  const [clickCount, setClickCount] = useState(0)
+  const [lastClickTime, setLastClickTime] = useState(0)
 
-  const ADMIN_PASSWORD = localStorage.getItem('carreiro-admin-password') || '1234'
-  const CLICKS_NEEDED = 3
+  const ADMIN_PASSWORD = '1234' // Senha padrão
 
   const handleLogoClick = () => {
-    const newCount = clickCount + 1
-    setClickCount(newCount)
-
-    if (clickTimeout.current) clearTimeout(clickTimeout.current)
-
-    if (newCount >= CLICKS_NEEDED) {
-      setShowPasswordModal(true)
-      setClickCount(0)
+    const now = Date.now()
+    
+    // Reset se passou mais de 2 segundos
+    if (now - lastClickTime > 2000) {
+      setClickCount(1)
     } else {
-      clickTimeout.current = setTimeout(() => setClickCount(0), 2000)
+      setClickCount(prev => prev + 1)
+    }
+    
+    setLastClickTime(now)
+
+    // 5 cliques rápidos = abrir senha
+    if (clickCount >= 4) {
+      setShowPasswordInput(true)
+      setClickCount(0)
     }
   }
 
@@ -38,113 +41,85 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onOpenConfig }) => {
     e.preventDefault()
     
     if (password === ADMIN_PASSWORD) {
-      setShowPasswordModal(false)
+      setShowPasswordInput(false)
       setPassword('')
-      onOpenConfig?.()
+      onAdminAccess() // ⭐ CHAMAR ADMIN
     } else {
-      alert('❌ Senha incorreta!')
+      alert('Senha incorreta!')
       setPassword('')
     }
   }
 
-  const slides = config.carouselSlides?.length > 0
-    ? config.carouselSlides
-    : [{
-        id: 'default',
-        imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1080&h=1920&fit=crop',
-        title: 'Bem-vindo!',
-        subtitle: 'Configure o carrossel no admin',
-      }]
+  const handleCancelPassword = () => {
+    setShowPasswordInput(false)
+    setPassword('')
+    setClickCount(0)
+  }
 
   return (
-    <div style={{ ...styles.container, backgroundColor: config.backgroundColor }}>
-      {/* Carrossel - Altura fixa */}
-      <div style={styles.carouselSection}>
-        <Carousel
-          slides={slides}
-          autoplay={true}
-          autoplayDelay={5000}
-          showIndicators={true}
-        />
+    <div style={styles.container}>
+      {/* Logo */}
+      <div 
+        onClick={handleLogoClick}
+        style={styles.logoContainer}
+      >
+        <h1 style={styles.title}>{config.storeName || 'Carreiro Express'}</h1>
+        <p style={styles.subtitle}>Lanches e Porções</p>
       </div>
 
-      {/* Conteúdo */}
-      <div style={styles.content}>
-        <div style={styles.logoSection} onClick={handleLogoClick}>
-          {config.logoUrl && (
-            <img
-              src={config.logoUrl}
-              alt={config.storeName}
-              style={styles.logoImage}
-            />
-          )}
-          
-          <h1 style={{ ...styles.storeName, color: config.textColor }}>
-            {config.storeName}
-          </h1>
-          <p style={{ ...styles.tagline, color: config.secondaryTextColor }}>
-            {config.tagline}
-          </p>
-        </div>
-
-        <button
-          style={{
-            ...styles.startButton,
-            backgroundColor: config.primaryColor,
-            color: config.buttonTextColor,
-          }}
-          onClick={onStart}
-        >
-          <span style={styles.startButtonIcon}>🍔</span>
-          <span style={styles.startButtonText}>{config.buttonText}</span>
+      {/* Botão Iniciar */}
+      {!showPasswordInput && (
+        <button onClick={onStart} style={styles.startButton}>
+          Tocar para Iniciar
         </button>
+      )}
 
-        <div style={styles.infoSection}>
-          <div style={styles.infoItem}>
-            <span style={styles.infoIcon}>⚡</span>
-            <span style={{ ...styles.infoText, color: config.secondaryTextColor }}>
-              Pedido rápido
-            </span>
-          </div>
-          <div style={styles.infoItem}>
-            <span style={styles.infoIcon}>💳</span>
-            <span style={{ ...styles.infoText, color: config.secondaryTextColor }}>
-              Múltiplas formas de pagamento
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Modal Senha */}
-      {showPasswordModal && (
-        <div style={styles.modalOverlay} onClick={() => setShowPasswordModal(false)}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h2 style={styles.modalTitle}>🔒 Acesso Admin</h2>
-            <form onSubmit={handlePasswordSubmit}>
+      {/* Input de Senha */}
+      {showPasswordInput && (
+        <div style={styles.passwordOverlay}>
+          <div style={styles.passwordModal}>
+            <h2 style={styles.passwordTitle}>Acesso Admin</h2>
+            <form onSubmit={handlePasswordSubmit} style={styles.passwordForm}>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Senha"
+                placeholder="Digite a senha"
                 style={styles.passwordInput}
                 autoFocus
               />
-              <div style={styles.modalButtons}>
-                <button
-                  type="button"
+              <div style={styles.passwordButtons}>
+                <button 
+                  type="button" 
+                  onClick={handleCancelPassword}
                   style={styles.cancelButton}
-                  onClick={() => setShowPasswordModal(false)}
                 >
                   Cancelar
                 </button>
-                <button type="submit" style={styles.confirmButton}>
+                <button 
+                  type="submit"
+                  style={styles.confirmButton}
+                >
                   Entrar
                 </button>
               </div>
             </form>
+            <p style={styles.passwordHint}>
+              Senha padrão: 1234
+            </p>
           </div>
         </div>
       )}
+
+      {/* Rodapé */}
+      <div style={styles.footer}>
+        <p style={styles.footerText}>
+          {config.storeAddress || 'Endereço da loja'}
+        </p>
+        <p style={styles.footerText}>
+          {config.storePhone || 'Telefone'}
+        </p>
+      </div>
     </div>
   )
 }
@@ -153,139 +128,95 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-
-  carouselSection: {
-    width: '100%',
-    height: '50vh', // 50% da altura da tela
-    overflow: 'hidden',
-  },
-
-  content: {
-    flex: 1,
+    backgroundColor: '#E11D48',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '2rem',
-    gap: '2rem',
+    position: 'relative',
   },
 
-  logoSection: {
+  logoContainer: {
     textAlign: 'center',
+    marginBottom: '3rem',
     cursor: 'pointer',
     userSelect: 'none',
   },
 
-  logoImage: {
-    maxWidth: '200px',
-    maxHeight: '200px',
-    objectFit: 'contain',
+  title: {
+    fontSize: '4rem',
+    fontWeight: 900,
+    color: '#FFF',
+    margin: 0,
     marginBottom: '1rem',
+    textShadow: '0 4px 6px rgba(0,0,0,0.3)',
   },
 
-  storeName: {
-    fontSize: '3rem',
-    fontWeight: 800,
+  subtitle: {
+    fontSize: '1.5rem',
+    color: '#FFF',
     margin: 0,
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-  },
-
-  tagline: {
-    fontSize: '1.25rem',
-    margin: 0,
-    marginTop: '0.5rem',
+    opacity: 0.9,
   },
 
   startButton: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '1rem',
-    width: '100%',
-    maxWidth: '600px',
-    padding: '2rem',
+    padding: '2rem 4rem',
+    fontSize: '2rem',
+    fontWeight: 700,
+    backgroundColor: '#FFF',
+    color: '#E11D48',
     border: 'none',
     borderRadius: '1rem',
     cursor: 'pointer',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-    transition: 'all 150ms ease-in-out',
+    boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+    transition: 'transform 150ms',
   },
 
-  startButtonIcon: {
-    fontSize: '64px',
-  },
-
-  startButtonText: {
-    fontSize: '2rem',
-    fontWeight: 800,
-    textTransform: 'uppercase',
-    letterSpacing: '0.1em',
-  },
-
-  infoSection: {
-    display: 'flex',
-    gap: '2rem',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-
-  infoItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-
-  infoIcon: {
-    fontSize: '1.5rem',
-  },
-
-  infoText: {
-    fontSize: '1rem',
-  },
-
-  modalOverlay: {
+  passwordOverlay: {
     position: 'fixed',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
   },
 
-  modal: {
-    backgroundColor: '#FFFFFF',
+  passwordModal: {
+    backgroundColor: '#FFF',
     borderRadius: '1rem',
     padding: '2rem',
     maxWidth: '400px',
     width: '90%',
   },
 
-  modalTitle: {
+  passwordTitle: {
     fontSize: '1.5rem',
     fontWeight: 700,
+    marginBottom: '1.5rem',
     textAlign: 'center',
-    marginBottom: '1rem',
+    color: '#111827',
+  },
+
+  passwordForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
   },
 
   passwordInput: {
-    width: '100%',
     padding: '1rem',
     fontSize: '1.25rem',
-    border: '2px solid #D1D5DB',
+    border: '2px solid #E5E7EB',
     borderRadius: '0.5rem',
     textAlign: 'center',
-    marginBottom: '1rem',
+    letterSpacing: '0.5rem',
   },
 
-  modalButtons: {
+  passwordButtons: {
     display: 'flex',
     gap: '1rem',
   },
@@ -293,7 +224,7 @@ const styles: Record<string, React.CSSProperties> = {
   cancelButton: {
     flex: 1,
     padding: '1rem',
-    fontSize: '1rem',
+    fontSize: '1.125rem',
     fontWeight: 600,
     backgroundColor: '#F3F4F6',
     color: '#374151',
@@ -305,13 +236,33 @@ const styles: Record<string, React.CSSProperties> = {
   confirmButton: {
     flex: 1,
     padding: '1rem',
-    fontSize: '1rem',
-    fontWeight: 700,
+    fontSize: '1.125rem',
+    fontWeight: 600,
     backgroundColor: '#E11D48',
-    color: '#FFFFFF',
+    color: '#FFF',
     border: 'none',
     borderRadius: '0.5rem',
     cursor: 'pointer',
+  },
+
+  passwordHint: {
+    marginTop: '1rem',
+    fontSize: '0.875rem',
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+
+  footer: {
+    position: 'absolute',
+    bottom: '2rem',
+    textAlign: 'center',
+  },
+
+  footerText: {
+    fontSize: '1rem',
+    color: '#FFF',
+    margin: '0.5rem 0',
+    opacity: 0.8,
   },
 }
 
