@@ -1,7 +1,7 @@
 // src/screens/HomeScreen.tsx
-// CORRIGIDO - Senha abre Admin
+// COM CARROSSEL
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useConfig } from '../context/ConfigContext'
 
 interface HomeScreenProps {
@@ -15,13 +15,26 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onAdminAccess }) => {
   const [password, setPassword] = useState('')
   const [clickCount, setClickCount] = useState(0)
   const [lastClickTime, setLastClickTime] = useState(0)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  const ADMIN_PASSWORD = '1234' // Senha padrão
+  const ADMIN_PASSWORD = '1234'
+
+  // Carrossel automático
+  useEffect(() => {
+    if (!config.carouselEnabled || config.carouselImages.length === 0) return
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex(prev => 
+        (prev + 1) % config.carouselImages.length
+      )
+    }, 5000) // Troca a cada 5 segundos
+
+    return () => clearInterval(interval)
+  }, [config.carouselEnabled, config.carouselImages.length])
 
   const handleLogoClick = () => {
     const now = Date.now()
     
-    // Reset se passou mais de 2 segundos
     if (now - lastClickTime > 2000) {
       setClickCount(1)
     } else {
@@ -30,7 +43,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onAdminAccess }) => {
     
     setLastClickTime(now)
 
-    // 5 cliques rápidos = abrir senha
     if (clickCount >= 4) {
       setShowPasswordInput(true)
       setClickCount(0)
@@ -43,7 +55,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onAdminAccess }) => {
     if (password === ADMIN_PASSWORD) {
       setShowPasswordInput(false)
       setPassword('')
-      onAdminAccess() // ⭐ CHAMAR ADMIN
+      onAdminAccess()
     } else {
       alert('Senha incorreta!')
       setPassword('')
@@ -58,6 +70,33 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onAdminAccess }) => {
 
   return (
     <div style={styles.container}>
+      {/* Carrossel de Imagens */}
+      {config.carouselEnabled && config.carouselImages.length > 0 && (
+        <div style={styles.carouselContainer}>
+          <img
+            src={config.carouselImages[currentImageIndex]}
+            alt="Carousel"
+            style={styles.carouselImage}
+            onError={(e) => {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&h=600&fit=crop'
+            }}
+          />
+          {config.carouselImages.length > 1 && (
+            <div style={styles.carouselDots}>
+              {config.carouselImages.map((_, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    ...styles.dot,
+                    backgroundColor: idx === currentImageIndex ? '#FFF' : 'rgba(255,255,255,0.5)'
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Logo */}
       <div 
         onClick={handleLogoClick}
@@ -136,11 +175,43 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'relative',
   },
 
+  carouselContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    overflow: 'hidden',
+  },
+
+  carouselImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+
+  carouselDots: {
+    position: 'absolute',
+    bottom: '1rem',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    display: 'flex',
+    gap: '0.5rem',
+  },
+
+  dot: {
+    width: '12px',
+    height: '12px',
+    borderRadius: '50%',
+    transition: 'background-color 300ms',
+  },
+
   logoContainer: {
     textAlign: 'center',
     marginBottom: '3rem',
     cursor: 'pointer',
     userSelect: 'none',
+    zIndex: 10,
   },
 
   title: {
@@ -170,6 +241,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
     transition: 'transform 150ms',
+    zIndex: 10,
   },
 
   passwordOverlay: {
@@ -256,6 +328,7 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'absolute',
     bottom: '2rem',
     textAlign: 'center',
+    zIndex: 10,
   },
 
   footerText: {
